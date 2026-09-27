@@ -25,6 +25,14 @@ jobs:
           python-version: '3.13'
       - run: python scripts/check_public_tree.py
       - run: python -m pip install -r requirements.txt
-      - run: python -m unittest discover -s tests -v
+      - name: Require all 99 synthetic regression tests
+        run: |
+          python - <<'PY'
+          import unittest
+          suite = unittest.defaultTestLoader.discover('tests')
+          assert suite.countTestCases() >= 99
+          result = unittest.TextTestRunner(verbosity=1).run(suite)
+          raise SystemExit(0 if result.wasSuccessful() else 1)
+          PY
       - name: Read fixed public source excerpts
         run: python tools/sl3p_board_trace.py --part '${{ matrix.part }}'
