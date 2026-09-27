@@ -7,6 +7,7 @@ on:
       - 'tools/sl3p_lens_callsite1i.py'
       - 'tools/sl3p_lens_semantics1i.py'
       - 'tools/sl3p_lens_dispatch1i.py'
+      - 'tools/sl3p_lens_backend1i.py'
       - 'tests/test_lens_callsite1i.py'
       - '.github/workflows/lens-callsite1i.yml'
 permissions:
@@ -28,8 +29,53 @@ jobs:
       - run: python scripts/check_public_tree.py
       - run: python -m pip install -r requirements-analysis.txt
       - run: python -m unittest discover -s tests -q
-      - name: Trace pinned lens code without executing firmware
-        run: python tools/sl3p_lens_semantics1i.py
-      - name: Follow the comparator helper and command descriptor
-        run: python tools/sl3p_lens_dispatch1i.py
+      - name: Independently check synthetic Thumb BL operands
+        run: |
+          python - <<'PY'
+          import random,struct,sys
+          import capstone as cs
+          sys.path.insert(0,'tools')
+          from sl3p_lens_callsite1i import bl_target
+          md=cs.Cs(cs.CS_ARCH_ARM,cs.CS_MODE_THUMB|cs.CS_MODE_MCLASS);md.detail=True
+          rng=random.Random(0x1c81)
+          for _ in range(2048):
+              first=0xf000|rng.randrange(2048)
+              second=0xd000|(rng.randrange(2)<<13)|(rng.randrange(2)<<11)|rng.randrange(2048)
+              raw=struct.pack('<HH',first,second)
+              address=rng.randrange(0x10000000,0x20000000,2)
+              ins=next(md.disasm(raw,address,count=1))
+              assert ins.mnemonic=='bl'
+              assert bl_target(raw,address)==ins.operands[0].imm&0xffffffff
+          print('2048 synthetic Thumb BL targets agree with Capstone operands')
+          PY
+      - name: Verify command evidence and inspect backend without executing firmware
+        run: |
+          python - <<'PY'
+          import json,sys
+          sys.path.insert(0,'tools')
+          from sl3p_lens_callsite1i import acquire_image
+          from sl3p_lens_semantics1i import inspect as semantics
+          from sl3p_lens_dispatch1i import inspect as dispatch
+          from sl3p_lens_backend1i import inspect as backend
+          image,proof=acquire_image()
+          s=semantics(image);d=dispatch(image);b=backend(image)
+          enclosing=next(x for x in s['enclosing_candidates'] if x['entry']==0x1db18)
+          assert enclosing['contains_reference'] and not enclosing['limit_reached']
+          assert enclosing['exits']==[{'address':0x1e68a,'reason':'return_or_pcwrite'}]
+          assert {x['term'] for x in enclosing['selected_term_loads']}=={'read','write','fwupdate'}
+          assert s['comparator']['calls']==[{'from':0x25bf2,'target':0x2e830,'operands':'#0x2e830'}]
+          assert len(s['comparator']['exits'])==3 and not s['comparator']['limit_reached']
+          assert {x['address']:x['name'] for x in d['selected_names']}=={0x41a30:'Memory',0x41458:'fwupdate',0x1de30:' ',0x1de34:'%X'}
+          result={'tool':'LENS_CALLSITE1I_VERIFIED','source_proof':proof,
+                  'comparator_entry':0x25bc0,'comparator_helper':0x2e830,
+                  'comparator_instruction_count':len(s['comparator']['instructions']),
+                  'enclosing_entry':enclosing['entry'],'enclosing_instruction_count':enclosing['instructions'],
+                  'entry_relative_reference_reached':True,'selected_names':d['selected_names'],
+                  'method_pointer_locations':enclosing['entry_pointer_locations'],
+                  'backend':b,'selected_evidence_assertions_pass':True,
+                  'firmware_executed':False,'binary_published':False}
+          print('LENS_CALLSITE1I_VERIFIED_JSON_BEGIN')
+          print(json.dumps(result,separators=(',',':')))
+          print('LENS_CALLSITE1I_VERIFIED_JSON_END')
+          PY
 # No binary artifacts, credentials retention, firmware execution or Git write-back.
