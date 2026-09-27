@@ -1,0 +1,55 @@
+name: UPD lineage evidence 1F
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/upd-lineage1f]
+    paths:
+      - 'tools/sl3p_lineage_probe1f.py'
+      - 'tests/test_lineage1f.py'
+      - '.github/workflows/upd-lineage1f.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upd-lineage1f-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Source-only guard
+        run: python scripts/check_public_tree.py
+      - name: Install pinned dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Full synthetic suite
+        run: |
+          python - <<'PY'
+          import unittest
+          suite = unittest.defaultTestLoader.discover('tests')
+          assert suite.countTestCases() >= 148, suite.countTestCases()
+          result = unittest.TextTestRunner(verbosity=1).run(suite)
+          raise SystemExit(0 if result.wasSuccessful() else 1)
+          PY
+      - name: Inspect five official comparison sources ephemerally
+        run: >-
+          python tools/sl3p_lineage_probe1f.py
+          --source sl601_41 --source sl2_630 --source q2m_510
+          --source sl_lenses11 --source sl_70200_11
+          --baseline evidence/SL3P_421_COMPARISON_BASELINE.json
+          --out outputs/upd-lineage1f.json
+      - name: Remove generated summaries
+        if: always()
+        run: rm -rf outputs
+
+# No firmware execution, extracted-binary artifacts, repository write-back,
+# credential access, decryption-key brute force, or camera/APK operations.
