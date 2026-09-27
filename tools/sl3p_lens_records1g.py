@@ -39,17 +39,20 @@ def parse_layout(data: bytes) -> dict:
         ordinal, kind, selector, offset, size, check = RECORD.unpack_from(data, 31+19*i)
         if ordinal != i:
             raise ValueError('record ordinal does not match table position')
-        if size:
+        absent_sentinel = kind == 2 and (offset, size, check) == (0xffffffff,)*3
+        present = bool(size) and not absent_sentinel
+        if present:
             if offset < end or offset > len(data) or size > len(data)-offset:
                 raise ValueError('payload outside the declared file bounds')
             key = (offset, size)
             if key in unique and unique[key] != check:
                 raise ValueError('aliases disagree on their check value')
             unique[key] = check
-        elif offset != 0 and not end <= offset <= len(data):
+        elif not absent_sentinel and offset != 0 and not end <= offset <= len(data):
             raise ValueError('empty record has invalid offset')
         rows.append({'index':i, 'kind':kind, 'selector_u32':selector,
-                     'offset':offset, 'size':size, 'check_u32':check})
+                     'offset':offset, 'size':size, 'check_u32':check,
+                     'present':present, 'absent_sentinel':absent_sentinel})
     pos = end
     for offset, size in sorted(unique):
         if offset != pos:
@@ -62,7 +65,8 @@ def parse_layout(data: bytes) -> dict:
             'header_byte_25':data[25], 'header_byte_26':data[26],
             'header_word_27':int.from_bytes(data[27:29], 'big'),
             'record_count':count, 'header_bytes':end,
-            'empty_records':sum(not r['size'] for r in rows),
+            'empty_records':sum(not r['present'] for r in rows),
+            'sentinel_records':sum(r['absent_sentinel'] for r in rows),
             'unique_payload_count':len(unique),
             'kind_counts':dict(Counter(r['kind'] for r in rows)),
             'unique_payload_bytes':len(data)-end, 'exact_range_coverage':True,
@@ -99,7 +103,7 @@ def audit(data: bytes) -> dict:
     payloads = []
     groups = {}
     for row in result['records']:
-        if row['size']:
+        if row['present']:
             groups.setdefault((row['offset'], row['size']), []).append(row)
     for (offset, size), rows in sorted(groups.items()):
         payload = data[offset:offset+size]
@@ -130,9 +134,18 @@ def audit(data: bytes) -> dict:
     result['file_bytes'] = len(data)
     result['file_sha256'] = hashlib.sha256(data).hexdigest()
     result['limits'] = ['A selector is not established as a model ID, address or version.',
-                        'Kind 0/1/2 semantics remain unknown.',
+                        'Kind 0/1 semantics remain unknown; kind 2 is absent in the two measured files.',
                         'Signature matches do not establish instruction architecture.',
                         'Range coverage and unkeyed checksums are not vendor signature verification.']
+    return result
+
+
+def verify_lens(data: bytes) -> dict:
+    """Require complete range coverage and all declared nonempty CRC-32 values."""
+    result = audit(data)
+    if not result['payloads'] or 'crc32_iso_hdlc' not in result['checksum_consensus']:
+        raise ValueError('one or more declared payload CRC-32 values do not match')
+    result['all_payload_crc32_verified'] = True
     return result
 
 
@@ -143,7 +156,7 @@ def main() -> None:
     plain, verification = reconstruct(data)
     del plain
     result = {'tool':'LENS_RECORDS1G', 'source_url':URL,
-              'verification':verification, 'lens':audit(data),
+              'verification':verification, 'lens':verify_lens(data),
               'payload_published':False,'firmware_executed':False}
     other_url = 'https://leica-camera.com/sites/default/files/70200_11.plf'
     other = acquire(other_url, 1573978)
@@ -151,7 +164,7 @@ def main() -> None:
         raise ValueError('comparison file differs from previously measured identity')
     result['comparison_url'] = other_url
     try:
-        result['comparison'] = audit(other)
+        result['comparison'] = verify_lens(other)
     except ValueError as exc:
         from sl3p_lens_layout_probe1g import measure
         result['comparison'] = {'strict_layout_accepted':False,
