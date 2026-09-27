@@ -27,6 +27,6 @@ jobs:
       - run: python scripts/check_public_tree.py
       - run: python -m pip install -r requirements-analysis.txt
       - run: python -m unittest discover -s tests -q
-      - name: Trace pinned lens callsite without executing firmware
-        run: python tools/sl3p_lens_callsite1i.py
+      - name: Trace pinned lens code without executing firmware
+        run: python tools/sl3p_lens_semantics1i.py
 # No binary artifacts, credentials retention, firmware execution or Git write-back.
