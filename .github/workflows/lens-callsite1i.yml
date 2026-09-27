@@ -6,6 +6,7 @@ on:
     paths:
       - 'tools/sl3p_lens_callsite1i.py'
       - 'tools/sl3p_lens_semantics1i.py'
+      - 'tools/sl3p_lens_dispatch1i.py'
       - 'tests/test_lens_callsite1i.py'
       - '.github/workflows/lens-callsite1i.yml'
 permissions:
@@ -29,4 +30,6 @@ jobs:
       - run: python -m unittest discover -s tests -q
       - name: Trace pinned lens code without executing firmware
         run: python tools/sl3p_lens_semantics1i.py
+      - name: Follow the comparator helper and command descriptor
+        run: python tools/sl3p_lens_dispatch1i.py
 # No binary artifacts, credentials retention, firmware execution or Git write-back.
