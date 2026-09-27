@@ -1,0 +1,39 @@
+name: Loader source evidence 1E
+
+on:
+  push:
+    branches: [research/loader-consumer1e]
+    paths:
+      - tools/sl3p_loader_source_probe.py
+      - tests/test_loader_source1e.py
+      - .github/workflows/loader-source1e.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+      - name: Source-only guard
+        run: python scripts/check_public_tree.py
+      - name: Test candidate decoder before touching real inputs
+        run: python -m unittest discover -s tests -p test_loader_source1e.py -v
+      - name: Inspect official M11 candidates ephemerally
+        run: python tools/sl3p_loader_source_probe.py --source m11p261 --source m11p264 --out outputs/loader-source1e.json
+      - name: Remove generated results
+        if: always()
+        run: rm -rf outputs
+
+# This job downloads only named public Leica firmware into process memory.
+# No proprietary binary or arbitrary string dump is written, uploaded, committed
+# or executed. Logs contain status, hashes, counts and bounded offset lists only.
+# M11 readability does not establish an SL3-P-compatible protection consumer.
