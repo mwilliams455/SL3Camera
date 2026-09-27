@@ -4,9 +4,12 @@ on:
   workflow_dispatch:
   push:
     branches: [research/lens-inner1h]
-    paths: ['.github/workflows/ldaf1h.yml', 'tools/sl3p_ldaf1h.py', 'tests/test_ldaf1h.py']
+    paths: ['.github/workflows/ldaf1h.yml', 'tools/sl3p_ldaf1h.py', 'tests/test_ldaf1h.py', 'tools/sl3p_sparse_code1h.py', 'tests/test_sparse_code1h.py']
 permissions:
   contents: read
+concurrency:
+  group: ldaf1h-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   inspect:
     runs-on: ubuntu-latest
@@ -19,36 +22,8 @@ jobs:
         with:
           python-version: '3.13'
       - run: python scripts/check_public_tree.py
-      - name: Measure candidate framing without removing bytes
-        run: |
-          python - <<'PY'
-          import sys,json,struct,re,collections,functools
-          sys.path.insert(0,'tools')
-          from sl3p_loader_source_probe import acquire
-          from sl3p_lens_plaintext1f import URL,SOURCE_BYTES,reconstruct
-          from sl3p_lens_records1g import verify_lens
-          data=acquire(URL,SOURCE_BYTES)
-          plain,proof=reconstruct(data)
-          del plain
-          report=[]
-          for p in verify_lens(data)['payloads']:
-              b=data[p['offset']:p['offset']+p['size']]
-              if not b.startswith(b'LDAF'): continue
-              offsets=[m.start() for m in re.finditer(b'LDAF',b)]
-              rows=[]
-              for i,off in enumerate(offsets):
-                  stop=offsets[i+1] if i+1<len(offsets) else len(b)
-                  if off+10>len(b):continue
-                  body=b[off+10:stop]
-                  rows.append({'off':off,'gap':stop-off,'tag':b[off+4], 'byte5':b[off+5],
-                               'u32le6':struct.unpack_from('<I',b,off+6)[0],
-                               'body_sum_mod256':sum(body)&255,
-                               'body_xor':functools.reduce(lambda a,c:a^c,body,0)})
-              report.append({'records':p['record_indexes'],'size':len(b),'marker_count':len(offsets),
-                             'gap_counts':dict(collections.Counter(r['gap'] for r in rows)),
-                             'first_rows':rows[:12],'last_rows':rows[-3:]})
-          print('LDAF_FRAMING1H_JSON_BEGIN')
-          print(json.dumps({'source_proof':proof,'payloads':report,'framing_validated':False},separators=(',',':')))
-          print('LDAF_FRAMING1H_JSON_END')
-          PY
+      - name: Test length-delimited records before parsing real inputs
+        run: python -m unittest discover -s tests -p test_ldaf1h.py -v
+      - name: Verify record checksums and address ranges
+        run: python tools/sl3p_ldaf1h.py
 # Header fields and counts only; no firmware execution or binary publication.
