@@ -1,0 +1,63 @@
+{
+  "milestone": "RESEARCH1I",
+  "record_type": "reviewed selected measurements, not complete job log",
+  "original_firmware_sha256": "b53a5aa7fe111c9f63b28e7cf889d8af5b5bc9397912738aba595e79923e47d8",
+  "source_sha256": "9c5330c22c74fcc2c5f0efedf93f88c29db8d32ddf7476c688144190ce898600",
+  "inner_sha256": "970c5051271b02f65db6fef638837818dc807a083e201220d8aac8ecdecf98db",
+  "final_source_run": 36345916740,
+  "final_source_job": 108694896433,
+  "final_source_commit": "92a87b8932fe3c8a2c111bcc83397cf5a58a70cf",
+  "unit_tests": 240,
+  "new_unit_tests": 18,
+  "additional_capstone_bl_cases": 2048,
+  "source_guard_tracked_files": 80,
+  "selected_assertions_pass": true,
+  "comparator": {
+    "entry": "0x25BC0",
+    "helper": "0x2E830",
+    "instruction_starts": 36,
+    "return_values": [-1, 0, 1],
+    "meaning": "NUL-terminated ASCII case-insensitive byte-string comparison"
+  },
+  "dispatcher": {
+    "entry": "0x1DB18",
+    "return": "0x1E68A",
+    "entry_relative_instruction_starts": 1150,
+    "name": "Memory",
+    "name_method": "0x1E68E",
+    "table": "0x40130",
+    "constructor": "0x1DAF8",
+    "fwupdate_string": "0x41458",
+    "fwupdate_argument_subtraction": 3072,
+    "reset_to_command_runtime_reachability_established": false
+  },
+  "backend": {
+    "constructor": "0x11B78",
+    "table": "0x3ECB4",
+    "slot8": "0x11D40",
+    "slot12": "0x11E38",
+    "record_step": "data length + 11",
+    "destination_static_operand": "0x2000ADA0",
+    "destination_implementation_resolved": false
+  },
+  "reader": {
+    "constructor": "0x11A18",
+    "table": "0x40028",
+    "opening_method": "0x11A34",
+    "packet_method": "0x11AB8",
+    "recognizes_marker": "LDAFR",
+    "recognizes_termination_prefix": "STOP",
+    "opening_read_bytes": 10,
+    "normal_io_request_bytes": 265,
+    "opening_word_byte_order": "little",
+    "normal_address_byte_order": "big",
+    "payload_length": "N - 5",
+    "checksum": "low-byte ones complement of sum of N bytes starting at packet byte 5",
+    "prologue_byte_meaning_established": false,
+    "stop_suffix_meaning_established": false
+  },
+  "firmware_executed": false,
+  "camera_upd_decryptor_recovered": false,
+  "base_still_renderer_recovered": false,
+  "binary_published": false
+}
