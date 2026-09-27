@@ -1,0 +1,45 @@
+{
+  "milestone": "RESEARCH1H",
+  "evidence_type": "reviewed selected transcription of completed GitHub job output, not full log archive",
+  "validated_commit": "635d5b7998958aa4742ce7648c9b88cd935e3830",
+  "run_id": 36339912507,
+  "job_id": 108677847487,
+  "original_sha256": "b53a5aa7fe111c9f63b28e7cf889d8af5b5bc9397912738aba595e79923e47d8",
+  "source_url": "https://leica-camera.com/sites/default/files/SLLens11.plf",
+  "source_sha256": "9c5330c22c74fcc2c5f0efedf93f88c29db8d32ddf7476c688144190ce898600",
+  "inner_target_sha256": "970c5051271b02f65db6fef638837818dc807a083e201220d8aac8ecdecf98db",
+  "packet_summary_columns": ["record_references", "wrapped_bytes", "packet_count", "data_packet_count", "mapped_data_bytes", "region_count", "trailer_hex"],
+  "packet_summary": [
+    [[20, 21, 22, 23, 24, 25], 251417, 1003, 1003, 240369, 3, "53544f5000"],
+    [[28, 29], 125206, 4642, 4642, 74129, 14, "53544f5001"],
+    [[38], 774196, 28674, 28673, 458768, 2, "53544f50"],
+    [[39], 774196, 28674, 28673, 458768, 2, "53544f50"]
+  ],
+  "all_62993_packet_checksums_match": true,
+  "all_four_observed_frames_verify": true,
+  "prologue_byte_and_stop_suffix_semantics_established": false,
+  "segments": [
+    {"address": 0, "size": 2336, "sha256": "ed6a1bcf2d3eaa01f7af76eef6c74a0b6a95b3cfdb6cba913bc7b8a9154e26b4"},
+    {"address": 32768, "size": 238025, "sha256": "67f94d8b46544972d1c4439bc2b0284f183742208207cd01828f98ada79add96"},
+    {"address": 524272, "size": 8, "sha256": "4fcb18d9ded612b8c2da8ab27a180d687b6fed0bc5de0d9100e89db948fe0af8"}
+  ],
+  "static_code": {
+    "isa_interpretation": "Cortex-M/Thumb; exact chip unknown",
+    "vector_address": 0,
+    "initial_sp": 536924824,
+    "reset_address": 262920,
+    "visited_instruction_starts": 11893,
+    "direct_edges": 2419,
+    "mapped_direct_edges": 2419,
+    "instruction_limit_hit": false,
+    "stops": {"unresolved_indirect_control_flow": 220, "return_or_pc_write": 274, "trap": 6},
+    "resolved_adjacent_literal_branches": [[262922, 1048], [262926, 1988], [262930, 267750]],
+    "fwupdate": {"string_address": 267352, "pool_address": 124808, "ldr_address": 124486, "bl_address": 124488, "bl_target": 154560, "exception_seeded_reached": false, "callee_semantics_established": false}
+  },
+  "capstone": {"distribution": "5.0.9", "module": "5.0.7", "core_api_tuple": [5, 0, 1280]},
+  "validation": {"unit_tests_passed": 222, "additional_operand_fixtures_passed": 3, "additional_sparse_traversal_fixtures_passed": 2, "real_source_execution_location": "GitHub Actions", "local_capstone_available": false},
+  "provisional_flat_string_address_superseded": 280545,
+  "camera_decrypted": false,
+  "firmware_executed": false,
+  "apk_produced": false
+}

@@ -2,35 +2,31 @@
 
 SL3-P firmware research and a future device-independent photographic renderer.
 
-**Current milestone: RESEARCH1G. The independently recovered lens region now has validated directory boundaries and CRC-32 checks: 40 entries, 14 absent entries, 26 nonempty references, 20 distinct payloads. A second lens package validates the same structure with an explicit absent-entry sentinel. The suite contains 175 synthetic tests. No camera-payload decryptor, key, base still renderer, autofocus implementation or APK has been recovered.**
+**Current milestone: RESEARCH1H. Four recovered lens components have validated LDAFR packet framing. One reconstructs into a coherent Cortex-M/Thumb image with a static reference to `fwupdate`. The camera UPD protection, base still renderer and APK remain unresolved. All 222 synthetic tests pass.**
 
-This repository contains inspection tools, synthetic tests and reviewed derived evidence. It contains no Leica firmware, extracted proprietary payloads, downloaded Looks, private photographs, video, credentials or signing keys. It is not a Photon fork.
+This is research source, not a Photon fork. No Leica firmware, reconstructed binary, Looks, private photographs, credentials or signing keys are committed.
 
 ## Start here
 
-- [RESEARCH1G report](docs/RESEARCH1G_REPORT.md)
-- [RESEARCH1G continuation handoff](docs/RESEARCH1G_HANDOFF.md)
-- [Selected completed-job measurements](evidence/research1g/lens_records_summary.json)
-- [Unique lens payload inventory](evidence/research1g/unique_payloads.csv)
-- [Independent lens-content recovery in RESEARCH1F](docs/RESEARCH1F_REPORT.md)
-- [SL3-P 4.2.1 comparison fingerprints](evidence/SL3P_421_COMPARISON_BASELINE.json)
-- [Project roadmap](docs/ROADMAP.md)
+- [RESEARCH1H report](docs/RESEARCH1H_REPORT.md)
+- [Continuation handoff](docs/RESEARCH1H_HANDOFF.md)
+- [Selected completed-job measurements](evidence/research1h/summary.json)
+- [Validated outer LENS directory in 1G](docs/RESEARCH1G_REPORT.md)
+- [Independent section-content recovery in 1F](docs/RESEARCH1F_REPORT.md)
 
-Earlier reports remain historical records. 1F recovered intended section contents from an independently distributed official source, not by decrypting update bytes. 1G validates the lens container's record structure, not its instruction architecture or camera-update semantics.
+## Current evidence
 
-## Current result
+The official standalone SLLens11.plf plus zero padding exactly matches the protected SL3-P lens section's expected SHA-256. This independent content recovery is not decryption. Its LENS directory and payload CRC-32s were established in 1G.
 
-Official SLLens11.plf has 4,575,234 bytes. Appending 16,396,286 zero bytes produces the complete expected SHA-256 of SL3-P section33 lens, also measured in SL3 and SL2. Most of that 20 MiB region is padding.
+Four inner payloads are packet streams. All 62,993 packets pass the observed count/address/data/checksum relation. The three observed STOP trailer forms are checked; the extra suffix and prologue-byte meanings remain unknown. Sparse reconstruction preserves gaps instead of inventing bytes.
 
-The lens file contains a 31-byte fixed header, 40 records of19 bytes, a21-byte EOH marker, and20 distinct payload ranges covering the rest of the file exactly. All20 declared CRC-32 values match. Six records share one251,417-byte payload; two others share a125,206-byte payload. Forty records do not mean40 distinct lenses or images. Selector and kind0/1 meanings remain unestablished.
+The component shared by LENS records20–25 has240,369 addressed data bytes in three regions. Its Cortex-M/Thumb interpretation is supported by the vector table, startup transfers and coherent mapped code. The exact chip remains unknown. The corrected fwupdate string address is0x41458; a literal load at0x1e646 is followed by a call to0x25bc0. This reference is outside the current partial exception-seeded traversal. Neither its callee's purpose nor camera-UPD compatibility is established.
 
-The separate70200_11.plf contains two records and one1,573,888-byte payload. Its other record uses kind2 and three all-ones fields as an absent-entry sentinel. Both files pass bounds, exact-coverage and CRC checks. The initial rejection of this sentinel is documented rather than hidden.
+**Do not use the provisional flat address0x447e1.** The exploratory sl3p_lens_code1h tool retains that rejected assumption for provenance; use sl3p_ldaf1h and sl3p_sparse_code1h for framed-image work. The ldaf1h workflow records the final interpretation.
 
-The existing fwupdate string is now localized to the checksum-verified payload shared by records20–25. No callable function, instruction architecture, address mapping or camera-UPD consumer has been established. Lens and camera update paths may be separate.
+## Synthetic tests
 
-## Run synthetic tests
-
-Use Python3.13 in an isolated environment:
+Use an isolated Python environment; repository CI uses Python3.13.
 
 ```sh
 python -m venv .venv
@@ -40,32 +36,24 @@ python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 ```
 
-The suite contains175 tests:156 inherited plus19 new in1G. Fixtures are synthetic; no firmware or camera is required. Passing tests validate tools and reference mathematics, not photographic fidelity, autofocus, video or Android performance.
+The222 tests generate synthetic inputs and require neither firmware nor Capstone. They validate research tools, not photographic fidelity, autofocus or Android performance.
 
-## Local firmware inspection
-
-Keep original firmware outside the checkout, or in ignored inputs/. Never force-add it to Git.
+## Explicit real-source analysis
 
 ```sh
-python tools/sl3p_inspect.py '/absolute/path/SL3P_421 (1).lfu' --out outputs/inspection
+python -m pip install -r requirements-analysis.txt
+python tools/sl3p_ldaf1h.py
+python tools/sl3p_sparse_code1h.py
 ```
 
-Input is read-only. Optional extraction removes only outer byte inversion; it does not decrypt protected sections. Keep outputs in ignored directories and review evidence before publishing it.
+These commands perform network access, pin the official source identity, check the reconstructed complete lens-section hash and LENS CRCs, and report selected structural/code evidence without saving or executing firmware. Capstone distribution5.0.9 reported module5.0.7/core API[5,0,1280] in the measured jobs; the report preserves those separate values.
 
-## Separate real-source experiments
+Ordinary GitHub CI is synthetic. Separate, read-only research workflows fetch public sources and log bounded evidence; they publish no firmware artifacts or Git write-back. Committed summaries are reviewed selections, not full log archives. CRC and content hashes do not authenticate vendor signatures.
 
-Research tests CI is synthetic and does not download firmware. Explicit source-evidence workflows are separate read-only jobs. They fetch named public Leica sources, inspect without execution, and log selected structural fields, hashes and fixed-term locations. No binary artifacts, raw UPD cryptographic metadata or Git write-back are produced. Push triggers are restricted to the relevant research branch and named files.
+Keep original firmware and any extracted content outside Git or in ignored local-input/output directories. The source-only guard and .gitignore do not replace manual review.
 
-```sh
-python tools/sl3p_lens_records1g.py
-```
+## Next investigation and project order
 
-This command performs network access, requires the recorded standalone identities and complete primary lens-section hash, validates ranges and payload CRCs, and prints a selected JSON report. Check both per-file all_payload_crc32_verified fields: an unfamiliar rejected comparison can be reported separately. It does not save or execute firmware. Full job identifiers are in the report; committed evidence contains reviewed selections, not complete log archives. Content hashes and CRC do not authenticate a vendor signature.
+Trace the enclosing function/callers at0x1e646 and the callee at0x25bc0 before assigning update-handler semantics. Continue looking for a demonstrated camera-UPD protection consumer. Do not restart blind key screens or assume lens-controller code is the camera renderer.
 
-## Development sequence
-
-Base still-image renderer -> Photon integration -> optional Leica Looks -> video. Autofocus/recognition is separate. Source-device and active-lens calibration remain separate from the portable target. Do not introduce HDR, Cobalt or an M-series substitute for the unknown base renderer.
-
-Next: determine inner payload formats and defensible instruction/address mappings, then trace actual references to the localized update-related string. Do not promote a string into a decryption handler or relaunch prior blind key screens. Related-model firmware is never permission to cross-flash cameras. No4.2.2 or Look upload is required.
-
-`tools/llog_reference.py` preserves published video mathematics, not an extracted SL3-P still transform. `.gitignore` and the tracked-file guard reduce accidental uploads but do not replace manual privacy/licensing review. No software license was selected during initialization.
+Base still rendering -> Photon integration with independent source-device/active-lens calibration -> optional Leica Looks -> video. AF is separate. No added HDR, Cobalt or M-series stand-in. No4.2.2 or new upload is required. Existing M-series projects are unchanged. Published L-Log mathematics remains a later-video reference, not a recovered still-photo transform.
