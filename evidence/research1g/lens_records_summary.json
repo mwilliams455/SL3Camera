@@ -1,0 +1,41 @@
+{
+  "milestone": "RESEARCH1G",
+  "provenance": "Reviewed selected-field transcription from completed GitHub logs; not a full log archive.",
+  "run_id": 36338148378,
+  "job_id": 108672861989,
+  "source_commit": "2f84e853464b80cc586a88bc463d2bea87e026df",
+  "baseline_firmware": {"bytes":201752064,"sha256":"b53a5aa7fe111c9f63b28e7cf889d8af5b5bc9397912738aba595e79923e47d8","local_rehash_unchanged":true},
+  "source": {"url":"https://leica-camera.com/sites/default/files/SLLens11.plf","bytes":4575234,"sha256":"9c5330c22c74fcc2c5f0efedf93f88c29db8d32ddf7476c688144190ce898600"},
+  "lens": {
+    "record_count":40,"header_bytes":812,"absent_records":14,"nonempty_records":26,"unique_payload_count":20,"exact_coverage":true,"checksum_algorithm":"CRC-32/ISO-HDLC",
+    "payloads": [
+      {"record_indexes":[0],"offset":812,"size":1311744,"crc32":2756572426,"sha256":"d035e7ede8251c86234d529814e89fcf98a6ab0c469b2a583bdbd5037e036064","crc32_verified":true},
+      {"record_indexes":[3],"offset":1312556,"size":274499,"crc32":1223104832,"sha256":"bc6fb6f76727c89d1856e4a88eada5a5e1fac97707bdb74d226de18a86b4b1b6","crc32_verified":true},
+      {"record_indexes":[4],"offset":1587055,"size":18546,"crc32":3850029093,"sha256":"89f3aa606da05a0deb1ec40c04e64e1a7c6b0e3a4ea821d540ddeef1f285ff68","crc32_verified":true},
+      {"record_indexes":[6],"offset":1605601,"size":274339,"crc32":318351451,"sha256":"3f374bd3b14c3a741357684050c40db5c67a1e27768219063bfba34edebcc485","crc32_verified":true},
+      {"record_indexes":[7],"offset":1879940,"size":18345,"crc32":3192964950,"sha256":"e4617af6707160b9a14d115a050be4353c342ae2cce4dafb38c1ad379d6ed916","crc32_verified":true},
+      {"record_indexes":[8],"offset":1898285,"size":525312,"crc32":2722676158,"sha256":"993ec372b2834e392896dc97bcc3fd6754b847e4e1ecf0782c4731383a6452e5","crc32_verified":true},
+      {"record_indexes":[16],"offset":2423597,"size":8800,"crc32":801853729,"sha256":"e062987d2d15dba9501dbe5e02f366b11d3e9aa1444cccf62208aa65334a1bc6","crc32_verified":true},
+      {"record_indexes":[17],"offset":2432397,"size":8888,"crc32":4128859674,"sha256":"ccf8286f2b8777ace69313169f2c621c4d1280bee407aeb9178e9c69474395d9","crc32_verified":true},
+      {"record_indexes":[18],"offset":2441285,"size":8696,"crc32":1936886327,"sha256":"5907fe3d65e5fe029cfe464f22b9aa68513eef831d9f6ae94facef6798aecd0a","crc32_verified":true},
+      {"record_indexes":[19],"offset":2449981,"size":8582,"crc32":2661944210,"sha256":"05d48a0902cc90fb9f08543859ebb7bceab3d17130df43c46b72072718e6fc43","crc32_verified":true},
+      {"record_indexes":[20,21,22,23,24,25],"offset":2458563,"size":251417,"crc32":960064190,"sha256":"970c5051271b02f65db6fef638837818dc807a083e201220d8aac8ecdecf98db","crc32_verified":true},
+      {"record_indexes":[26],"offset":2709980,"size":8582,"crc32":3493528348,"sha256":"7667f64a18e835e2ac7c1a44ed752a09c667d4cd920e8fe4e3dc74cf3a13411a","crc32_verified":true},
+      {"record_indexes":[27],"offset":2718562,"size":8582,"crc32":2239948091,"sha256":"b09ec350ea8876972ebaffa4b6f05e0f8b11925201fd0c0b956d9c32685b2841","crc32_verified":true},
+      {"record_indexes":[28,29],"offset":2727144,"size":125206,"crc32":632156928,"sha256":"9e1ebc7c44d9f8e8b4ab47f12f0b69887c0b4d56eb2ff1d5dbc1ee3f0a34d4f9","crc32_verified":true},
+      {"record_indexes":[30],"offset":2852350,"size":32097,"crc32":3004196558,"sha256":"9758a7794018c438637c3f5ec2e9d1c84d610273e4cd7d61a8a0f80de1d976b5","crc32_verified":true},
+      {"record_indexes":[32],"offset":2884447,"size":8072,"crc32":3124905568,"sha256":"1a8f71e47104962969d384ce1f327e131d2b387133110204cdc52a20aeddaab3","crc32_verified":true},
+      {"record_indexes":[34],"offset":2892519,"size":66641,"crc32":220557476,"sha256":"ac2116e5100ede6704ffaf90a913702d8fdc06deeda52c262990c707bdf601a6","crc32_verified":true},
+      {"record_indexes":[36],"offset":2959160,"size":67682,"crc32":776591,"sha256":"5d5984a961e3d2ba5e69f30422233e254653a9e5c93bc7c2dd2ae82201e6e988","crc32_verified":true},
+      {"record_indexes":[38],"offset":3026842,"size":774196,"crc32":1778692554,"sha256":"52489cf93ef193e4301474c8f623d5b47a34e8a445e065f1c8f29e2f3cd980c6","crc32_verified":true},
+      {"record_indexes":[39],"offset":3801038,"size":774196,"crc32":2230926810,"sha256":"b95089936c930774d46904c091a63bbf5d9dd5aadef661a06145a27845bcc1a8","crc32_verified":true}
+    ]
+  },
+  "comparison": {"url":"https://leica-camera.com/sites/default/files/70200_11.plf","bytes":1573978,"sha256":"4e26dce0ec3a4e64454b46e9df9d4dcdfb319be6a3cb479fb95521fe0ed70d32","record_count":2,"header_bytes":90,"absent_records":1,"all_ones_sentinel_records":1,"unique_payload_count":1,"payload":{"offset":90,"size":1573888,"crc32":3354654083,"sha256":"bbdb099b15e4122111cb15215cb273bd85c709d11f87f313ea9048fdbbdcea7c","crc32_verified":true},"shared_full_payloads_with_source":0},
+  "fwupdate": {"containing_record_indexes":[20,21,22,23,24,25],"payload_offset":2458563,"payload_size":251417,"within_payload_offset":247797,"file_offset":2706360,"semantics":"string only; no validated code reference or protection consumer"},
+  "failed_intermediate": {"run_id":36337873828,"reason":"Initial parser treated all-ones absent sentinel as a size. Rejected on bounds; corrected only for kind2 with all three words all-ones."},
+  "new_synthetic_tests":19,
+  "camera_decryption_performed":false,
+  "executable_architecture_established":false,
+  "binary_payload_published":false
+}
