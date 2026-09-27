@@ -150,11 +150,17 @@ def main() -> None:
     if hashlib.sha256(other).hexdigest() != '4e26dce0ec3a4e64454b46e9df9d4dcdfb319be6a3cb479fb95521fe0ed70d32':
         raise ValueError('comparison file differs from previously measured identity')
     result['comparison_url'] = other_url
-    result['comparison'] = audit(other)
-    result['shared_payload_hash_pairs'] = [
-        {'lens_records':a['record_indexes'],'other_records':b['record_indexes'],'size':a['size']}
-        for a in result['lens']['payloads'] for b in result['comparison']['payloads']
-        if a['size'] == b['size'] and a['sha256'] == b['sha256']]
+    try:
+        result['comparison'] = audit(other)
+    except ValueError as exc:
+        from sl3p_lens_layout_probe1g import measure
+        result['comparison'] = {'strict_layout_accepted':False,
+                                'reason':str(exc), 'directory_only':measure(other)}
+    else:
+        result['shared_payload_hash_pairs'] = [
+            {'lens_records':a['record_indexes'],'other_records':b['record_indexes'],'size':a['size']}
+            for a in result['lens']['payloads'] for b in result['comparison']['payloads']
+            if a['size'] == b['size'] and a['sha256'] == b['sha256']]
     print('LENS_RECORDS1G_JSON_BEGIN')
     print(json.dumps(result,separators=(',',':')))
     print('LENS_RECORDS1G_JSON_END')
