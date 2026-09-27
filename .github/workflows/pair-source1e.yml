@@ -1,0 +1,49 @@
+name: Pinned pair evidence 1E
+
+on:
+  push:
+    branches: [research/loader-consumer1e]
+    paths:
+      - tools/sl3p_pair_probe1e.py
+      - tests/test_pair_probe1e.py
+      - evidence/SL3P_421_COMPARISON_BASELINE.json
+      - .github/workflows/pair-source1e.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+      - name: Source-only guard
+        run: python scripts/check_public_tree.py
+      - name: Install test dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run complete research regression suite
+        run: |
+          python - <<'PY'
+          import unittest
+          suite = unittest.defaultTestLoader.discover('tests')
+          assert suite.countTestCases() >= 129, suite.countTestCases()
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          raise SystemExit(0 if result.wasSuccessful() else 1)
+          PY
+      - name: Compare exact measured firmware inputs
+        run: python tools/sl3p_pair_probe1e.py --baseline evidence/SL3P_421_COMPARISON_BASELINE.json --out outputs/pair-source1e.json
+      - name: Remove generated results
+        if: always()
+        run: rm -rf outputs
+
+# Only fingerprints of the user-supplied SL3-P file are in Git.
+# The named public SL3 download must match its measured full SHA-256.
+# No firmware bytes, metadata16 values, keys, private assets or arbitrary strings
+# are logged, executed, uploaded as artifacts, or written back to the repository.
