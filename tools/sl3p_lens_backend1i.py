@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect two constructor-resolved lens backend methods; static read only."""
+"""Inspect constructor-resolved lens backend and record-reader methods; static only."""
 from __future__ import annotations
 import json
 import struct
@@ -33,10 +33,23 @@ def inspect(image):
             raise ValueError('recorded constructor/dispatch call differs')
     if literal(image,0x11b86)['value']!=0x3ecb4 or cstring(image,0x41a30)!='Memory':
         raise ValueError('constructor or name identity differs')
+    reader_words=[0x11a35,0x11ab9]
+    if image.read(0x40028,8)!=struct.pack('<2I',*reader_words) or literal(image,0x11a24)['value']!=0x40028:
+        raise ValueError('reader constructor/table identity differs')
+    reader_rows=window(0x11a34,0x11ab8)+window(0x11ab8,0x11b78)
+    markers=[]
+    for row in reader_rows:
+        h=row.get('literal')
+        if h:
+            text=cstring(image,h['value'])
+            if text in ('LDAFR','LDAF','STOP'):
+                markers.append({'instruction':row['address'],'address':h['value'],'marker':text})
     return {'backend_table_address':0x3ecb4,'backend_table_words':expected,
             'constructor_entry':0x11b78,
             'slot8_method':window(0x11d40,0x11e38),
             'slot12_method':window(0x11e38,0x11e4a),
+            'reader_table_address':0x40028,'reader_table_words':reader_words,
+            'reader_methods':reader_rows,'selected_marker_loads':markers,
             'selected_constructor_and_call_checks_pass':True,
             'limits':['Virtual targets are resolved for the measured constructor chain, not every possible runtime object.',
                       'Windows are bounded by neighboring table entries; embedded pools may still be data.',
