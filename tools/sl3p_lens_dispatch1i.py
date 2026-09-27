@@ -56,6 +56,15 @@ def inspect(image):
         ins=one(a)
         if ins is not None and ins.mnemonic.startswith('push') and 'lr' in ins.op_str:
             prologue.append(a)
+    constructors=[{'entry':a,'instructions':window(a,32)} for a in (0x11a18,0x11b78)]
+    tables=[]
+    for item in constructors:
+        for r in item['instructions']:
+            h=r.get('literal')
+            if h and 0x30000 <= h['value'] < 0x421a0:
+                block=image.read(h['value'],24)
+                if block:
+                    tables.append({'constructor':item['entry'],'load':r['address'],'address':h['value'],'candidate_words':list(struct.unpack('<6I',block))})
     return {'ascii_helper':window(0x2e830,12,0x2e83c),
             'tokenizer':window(0x25b74,40,0x25bba),
             'dispatch_start':window(0x1db18,42),
@@ -66,7 +75,9 @@ def inspect(image):
             'descriptor_reference_windows':[{'reference':r['instruction'],'instructions':window(r['instruction']-8,18)} for r in refs[:6]],
             'preceding_prologues':prologue,
             'memory_constructor':window(0x1daf8,16,0x1db18),
-            'constructor_caller_context':window(0xb878,52),
+            'constructor_caller_context':window(0xb878,22),
+            'backend_constructor_candidates':constructors,
+            'constructor_literal_table_candidates':tables,
             'limits':['Descriptor references are static candidates, not proof of runtime object identity.',
                       'Selected name method and comparator do not establish an update transport.']}
 
