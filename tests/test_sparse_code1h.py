@@ -3,7 +3,7 @@ import struct
 import sys
 import unittest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
-from sl3p_sparse_code1h import SparseImage,literal,vector_tables
+from sl3p_sparse_code1h import SparseImage,literal,vector_tables,adjacent_literal_target
 
 class SparseTests(unittest.TestCase):
     def test_holes_not_synthesized(self):
@@ -49,3 +49,12 @@ class SparseTests(unittest.TestCase):
         self.assertEqual(vector_tables(image)[0]['reset_address'],0x8000)
         image=SparseImage([(0,struct.pack('<16I',*words))])
         self.assertEqual(vector_tables(image),[])
+
+    def test_adjacent_literal_resolves_branch(self):
+        image=SparseImage([(0x8000,bytes.fromhex('0148804700000000')+struct.pack('<I',0x8101)),(0x8100,b'\x70\x47')])
+        self.assertEqual(adjacent_literal_target(image,0x8000,0x8002,0),0x8100)
+
+    def test_nonadjacent_wrong_register_unmapped_rejected(self):
+        image=SparseImage([(0x8000,bytes.fromhex('0148804700000000')+struct.pack('<I',0x8101))])
+        for previous,current,register in ((None,0x8002,0),(0x8000,0x8004,0),(0x8000,0x8002,1),(0x8000,0x8002,0)):
+            self.assertIsNone(adjacent_literal_target(image,previous,current,register))

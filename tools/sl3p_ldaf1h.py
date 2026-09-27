@@ -90,6 +90,17 @@ def summarize(blob: bytes) -> tuple[list[tuple[int,bytes]],dict]:
     return image,report
 
 
+
+def verify_packets(blob: bytes) -> tuple[list[tuple[int,bytes]],dict]:
+    """Require the complete observed framing; preserve unknown metadata meaning."""
+    image,report=summarize(blob)
+    if bytes.fromhex(report['trailer_hex']) not in (b'STOP',b'STOP\0',b'STOP\1'):
+        raise ValueError('unrecognized LDAFR STOP trailer')
+    if not image:
+        raise ValueError('no mapped data; cannot verify an empty image')
+    report['complete_observed_framing_verified']=True
+    return image,report
+
 def main():
     from sl3p_loader_source_probe import acquire
     from sl3p_lens_plaintext1f import URL,SOURCE_BYTES,reconstruct
@@ -102,8 +113,8 @@ def main():
         content=source[p['offset']:p['offset']+p['size']]
         if not content.startswith(MAGIC): continue
         try:
-            _,report=summarize(content)
-            report['status']='packet_checks_pass_trailer_uninterpreted'
+            _,report=verify_packets(content)
+            report['status']='complete_observed_framing_verified'
         except ValueError as exc:
             report={'status':'rejected','reason':str(exc)}
         report['records']=p['record_indexes']

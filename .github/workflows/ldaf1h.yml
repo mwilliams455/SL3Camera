@@ -26,6 +26,32 @@ jobs:
         run: python -m pip install -r requirements.txt capstone==5.0.9
       - name: Run complete synthetic regression suite
         run: python -m unittest discover -s tests -q
+      - name: Check independent operands and a complete synthetic sparse traversal
+        run: |
+          python - <<'PY'
+          import sys,struct
+          import capstone as cs
+          from capstone.arm import ARM_OP_MEM,ARM_REG_PC
+          sys.path.insert(0,'tools')
+          from sl3p_sparse_code1h import SparseImage,literal,analyze
+          md=cs.Cs(cs.CS_ARCH_ARM,cs.CS_MODE_THUMB|cs.CS_MODE_MCLASS);md.detail=True
+          for code,reg in [(bytes.fromhex('0149'),1),(bytes.fromhex('dff80420'),2),(bytes.fromhex('5ff80420'),2)]:
+              image=SparseImage([(0x8000,code+b'\0'*16)])
+              ins=next(md.disasm(code,0x8000,count=1))
+              hit=literal(image,0x8000)
+              assert ins.operands[1].type==ARM_OP_MEM and ins.operands[1].mem.base==ARM_REG_PC
+              assert hit['pool_address']==0x8004+ins.operands[1].mem.disp
+              assert ins.reg_name(ins.operands[0].reg)==f'r{reg}'
+          words=[0x20001000]+[0x8001]*15
+          for i in (7,8,9,10,13):words[i]=0
+          for mapped in (True,False):
+              regions=[(0,struct.pack('<16I',*words)),(0x8000,bytes.fromhex('0148004700000000')+struct.pack('<I',0x8101))]
+              if mapped:regions.append((0x8100,bytes.fromhex('7047')))
+              result=analyze(SparseImage(regions))
+              assert result['instruction_count']==(3 if mapped else 2),result
+              assert len(result['resolved_adjacent_literal_branches'])==int(mapped),result
+          print('3 operand cross-checks and 2 sparse traversal fixtures passed')
+          PY
       - name: Verify record checksums and address ranges
         run: python tools/sl3p_ldaf1h.py
       - name: Trace packet-addressed code rather than wrapped file coordinates

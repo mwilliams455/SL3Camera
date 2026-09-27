@@ -77,9 +77,19 @@ def vector_tables(image:SparseImage):
     return result
 
 
+
+def adjacent_literal_target(image:SparseImage, previous:int|None, current:int, register:int):
+    """Resolve only a directly preceding literal load into the branch register."""
+    if previous is None:return None
+    hit=literal(image,previous)
+    if not hit or previous+hit['width']!=current or hit['register']!=register:
+        return None
+    target=hit['value']
+    return (target&~1) if target&1 and image.read(target&~1,2) is not None else None
+
 def analyze(image:SparseImage,max_instructions:int=60000):
     import capstone as cs
-    from capstone.arm import ARM_OP_IMM,ARM_REG_PC
+    from capstone.arm import ARM_OP_IMM,ARM_OP_REG,ARM_REG_PC
     md=cs.Cs(cs.CS_ARCH_ARM,cs.CS_MODE_THUMB|cs.CS_MODE_MCLASS)
     md.detail=True
     def one(address):
@@ -93,8 +103,10 @@ def analyze(image:SparseImage,max_instructions:int=60000):
     seen={}
     edges=[]
     stops=Counter()
+    resolved_indirect=[]
     while queue and len(seen)<max_instructions:
         address=queue.popleft()
+        previous=None
         for _ in range(8192):
             if address in seen:break
             ins=one(address)
@@ -110,7 +122,15 @@ def analyze(image:SparseImage,max_instructions:int=60000):
                 if mapped:queue.append(target)
                 if not call and ins.mnemonic in ('b','b.w'):break
             elif jump or call:
-                stops['indirect_control_flow']+=1
+                target=None
+                if ins.operands and ins.operands[0].type==ARM_OP_REG:
+                    name=ins.reg_name(ins.operands[0].reg)
+                    if name.startswith('r') and name[1:].isdigit():
+                        target=adjacent_literal_target(image,previous,address,int(name[1:]))
+                if target is not None:
+                    queue.append(target)
+                    resolved_indirect.append({'from':address,'target':target,'literal_load':previous,'call':call})
+                else:stops['unresolved_indirect_control_flow']+=1
                 if not call:break
             else:
                 try:pcwrite=ARM_REG_PC in ins.regs_access()[1]
@@ -123,6 +143,7 @@ def analyze(image:SparseImage,max_instructions:int=60000):
                     stops['return_or_pc_write']+=1;break
             if ins.mnemonic in ('udf','udf.w','bkpt'):
                 stops['trap']+=1;break
+            previous=address
             address+=ins.size
             if len(seen)>=max_instructions:break
         else:stops['block_limit']+=1
@@ -133,7 +154,11 @@ def analyze(image:SparseImage,max_instructions:int=60000):
         for _ in range(12):
             ins=one(start)
             if ins is None:break
-            sample.append(display(ins));start+=ins.size
+            row=display(ins)
+            hit=literal(image,start)
+            if hit:row['literal_value']=hit['value']
+            sample.append(row);start+=ins.size
+            if ins.group(cs.CS_GRP_JUMP) and not ins.group(cs.CS_GRP_CALL):break
         reset_samples.append({'vector_address':t['address'],'instructions':sample})
     refs=[]
     for string_address in image.find(b'fwupdate\0'):
@@ -158,7 +183,7 @@ def analyze(image:SparseImage,max_instructions:int=60000):
             'vector_tables':tables,'seed_count':len(seeds),'instruction_count':len(seen),
             'instruction_limit_reached':len(seen)>=max_instructions,
             'direct_edges':len(edges),'mapped_direct_edges':sum(e[3] for e in edges),
-            'stop_counts':dict(stops),'reset_samples':reset_samples,'fwupdate_references':refs,
+            'stop_counts':dict(stops),'resolved_adjacent_literal_branches':resolved_indirect[:20],'reset_samples':reset_samples,'fwupdate_references':refs,
             'limits':['Partial static traversal; indirect branches and tables unresolved.',
                       'Linear literal candidates outside seeded traversal are not proven reachable.',
                       'No camera-UPD consumer semantics inferred.']}
@@ -169,12 +194,12 @@ def main():
     from sl3p_lens_plaintext1f import URL,SOURCE_BYTES,reconstruct
     from sl3p_lens_records1g import verify_lens
     from sl3p_lens_inner1h import TARGET_SHA
-    from sl3p_ldaf1h import summarize
+    from sl3p_ldaf1h import verify_packets
     source=acquire(URL,SOURCE_BYTES)
     plain,proof=reconstruct(source);del plain
     target=next(p for p in verify_lens(source)['payloads'] if p['sha256']==TARGET_SHA)
     content=source[target['offset']:target['offset']+target['size']]
-    regions,framing=summarize(content)
+    regions,framing=verify_packets(content)
     if framing['trailer_hex']!='53544f5000':raise ValueError('unrecognized target STOP trailer')
     report={'tool':'SPARSE_CODE1H','source_proof':proof,'target_sha256':hashlib.sha256(content).hexdigest(),
             'framing':framing,'analysis':analyze(SparseImage(regions)),

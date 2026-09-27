@@ -2,7 +2,7 @@ from pathlib import Path
 import sys
 import unittest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
-from sl3p_ldaf1h import MAGIC,Packet,parse_packets,segments,summarize
+from sl3p_ldaf1h import MAGIC,Packet,parse_packets,segments,summarize,verify_packets
 
 
 def record(address,body):
@@ -73,3 +73,16 @@ class LdafTests(unittest.TestCase):
         image,r=summarize(package(record(0,b'private_fixture\0fwupdate\0')))
         self.assertNotIn('private_fixture',str(r))
         self.assertEqual(r['segments'][0]['fwupdate_address'],16)
+
+    def test_complete_observed_stop_variants(self):
+        for tail in (b'STOP',b'STOP\0',b'STOP\1'):
+            image,r=verify_packets(package(record(0,b'AB'),tail=tail))
+            self.assertTrue(r['complete_observed_framing_verified'])
+            self.assertFalse(r['trailer_semantics_verified'])
+
+    def test_complete_rejects_unknown_stop(self):
+        for tail in (b'',b'END!',b'STOP\2'):
+            with self.assertRaises(ValueError):verify_packets(package(record(0,b'AB'),tail=tail))
+
+    def test_complete_rejects_no_data(self):
+        with self.assertRaises(ValueError):verify_packets(package(record(0,b''),tail=b'STOP'))
