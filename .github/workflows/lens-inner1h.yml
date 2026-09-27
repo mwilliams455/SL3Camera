@@ -1,0 +1,39 @@
+name: Lens inner-format evidence 1H
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/lens-inner1h]
+    paths:
+      - 'tools/sl3p_lens_inner1h.py'
+      - 'tools/sl3p_lens_code1h.py'
+      - 'tests/test_lens_inner1h.py'
+      - 'tests/test_lens_code1h.py'
+      - '.github/workflows/lens-inner1h.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lens-inner1h-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+      - name: Source-only guard
+        run: python scripts/check_public_tree.py
+      - name: Test bounded inner-format predicates
+        run: python -m unittest discover -s tests -p test_lens_inner1h.py -v
+      - name: Inspect checksum-verified payload formats in memory
+        run: python tools/sl3p_lens_inner1h.py
+
+# No firmware execution, binary artifacts, camera writes or repository write-back.
