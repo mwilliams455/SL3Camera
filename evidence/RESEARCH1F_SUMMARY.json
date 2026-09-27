@@ -1,0 +1,91 @@
+{
+  "milestone": "RESEARCH1F",
+  "date": "2026-09-27",
+  "provenance": "Reviewed transcription of selected completed GitHub job outputs; not a complete log archive.",
+  "baseline": {
+    "input_size": 201752064,
+    "input_sha256": "b53a5aa7fe111c9f63b28e7cf889d8af5b5bc9397912738aba595e79923e47d8",
+    "unchanged_local_recheck": true,
+    "canonical_rows_rechecked": 61
+  },
+  "lens_plaintext": {
+    "source_url": "https://leica-camera.com/sites/default/files/SLLens11.plf",
+    "source_size": 4575234,
+    "source_sha256": "9c5330c22c74fcc2c5f0efedf93f88c29db8d32ddf7476c688144190ce898600",
+    "appended_zero_bytes": 16396286,
+    "baseline_section_index": 33,
+    "target_size": 20971520,
+    "target_sha256": "555040b9ef40ac269b6b520c6096d5ad78db5336a9ac599bf6b9f64b93cf8dc1",
+    "full_expected_hash_matches": true,
+    "source_identity_independently_pinned": true,
+    "nonconstant_plaintext_recovered_by_independent_source": true,
+    "protected_payload_decryption_performed": false,
+    "prefix_markers": {"LENS-UPDATE-FILE-SOF:": 0, "LENS-UPDATE-FILE-EOH:": 791},
+    "fwupdate_term_offset": 2706360,
+    "candidate_header_table_arithmetic": "31 + 40 * 19 = 791",
+    "record_layout_validated": false
+  },
+  "other_sources": [
+    {
+      "source_id": "SL2_630",
+      "source_size": 122170880,
+      "source_sha256": "15938acd8110e6908fece073c56e20287591c2d3f720bdf025a106c74737b732",
+      "identifier": "MC792",
+      "crc_matches": true,
+      "section_count": 48,
+      "opaque_sections": 41,
+      "empty_sections": 1,
+      "verified_fills": 6,
+      "readable_nonconstant_sections": 0,
+      "baseline_matches_excluding_known_ff": ["lens", "hm_c_ddr", "hm_d_ddr"]
+    },
+    {
+      "source_id": "Q2M_510",
+      "source_size": 118262784,
+      "source_sha256": "91964ac6a9edcd5428c3d113d90627f028ed7a1a24ce597c4baba69f12be86ac",
+      "identifier": "DC1802M",
+      "crc_matches": true,
+      "section_count": 46,
+      "opaque_sections": 37,
+      "empty_sections": 1,
+      "verified_fills": 8,
+      "readable_nonconstant_sections": 0,
+      "protected_baseline_matches": 0
+    },
+    {
+      "source_id": "70200_11",
+      "source_size": 1573978,
+      "source_sha256": "4e26dce0ec3a4e64454b46e9df9d4dcdfb319be6a3cb479fb95521fe0ed70d32",
+      "magic": "LENS",
+      "strict_upd_verified": false,
+      "whole_file_or_trailing_fill_matches": 0
+    },
+    {
+      "source_id": "SL601_41_ENDPOINT",
+      "response_size": 82863,
+      "response_sha256": "ae6590033d4c6281e3caccd4983b2f28e4355353dca83eaa35664652a6a5891c",
+      "status": "HTML_like_response_rejected_not_firmware",
+      "magic4_hex": "3c21444f"
+    }
+  ],
+  "older_loader_identity": {
+    "models": ["SL2_630", "Q2M_510"],
+    "name": "loader1",
+    "size": 4096,
+    "expected_sha256": "4913f493636ed435d185ca3e5bea7a49eec28195606c99845d38ec68d91ccc5b",
+    "readable": false,
+    "sl3p_loader_compatibility_established": false
+  },
+  "completed_runs": [
+    {"run_id": 36336584568, "job_id": 108668480818, "commit": "d54c831aa013721edd6b44a458bd6876cd98de02", "tests": 148, "source_guard_files": 46, "conclusion": "success"},
+    {"run_id": 36336749196, "job_id": 108668945682, "commit": "5bf6582f3322605c285a128ef56634c61504c116", "tests": 156, "source_guard_files": 49, "conclusion": "success"}
+  ],
+  "local_test_count": 156,
+  "local_tests_passed": true,
+  "limits": [
+    "Known plaintext is not a recovered cipher key or a working camera UPD consumer.",
+    "The recovered region is mostly trailing padding, not 20 MiB of executable code.",
+    "No SL3-P tone curve, colour matrix, base rendering implementation or APK recovered.",
+    "No proprietary binary, raw UPD cryptographic metadata, credentials, Looks or photographs published."
+  ]
+}
