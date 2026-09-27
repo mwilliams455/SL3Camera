@@ -1,0 +1,33 @@
+name: Public source inventory
+on:
+  push:
+    branches: [research/loader-evidence1d]
+    paths: [.github/workflows/public-source-probe.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    name: Inventory ${{ matrix.source }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        source: [q3_oss, sl3_420, q3_411]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+      - name: Check source-only tracked files
+        run: python scripts/check_public_tree.py
+      - name: Install research dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Validate synthetic tests before network inspection
+        run: python -m unittest discover -s tests -v
+      - name: Read fixed official source and publish metadata only
+        run: python tools/sl3p_public_source_probe.py --source '${{ matrix.source }}'
