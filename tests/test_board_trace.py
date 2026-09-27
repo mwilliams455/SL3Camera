@@ -22,6 +22,12 @@ class BoardTraceTests(unittest.TestCase):
     def test_fixed_file_order(self):
         x=selected_members(fixture([('b',b'boot_b','file'),('a',b'boot_a','file')]),('a','b'))
         self.assertEqual([r['path'] for r in x],['a','b'])
+    def test_non_utf8_comment_preserves_hash(self):
+        import hashlib
+        data=b'/* \x8d */ boot();\n'
+        x=summarize('x.c',data)
+        self.assertEqual(x['sha256'],hashlib.sha256(data).hexdigest())
+        self.assertIn('boot();',x['selected_lines'][0][1])
     def test_missing_path_rejected(self):
         with self.assertRaises(ValueError):
             selected_members(fixture([('b',b'boot','file')]),('a',))
