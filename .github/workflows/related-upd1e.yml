@@ -1,0 +1,38 @@
+name: Related UPD evidence 1E
+
+on:
+  push:
+    branches: [research/loader-consumer1e]
+    paths:
+      - tools/sl3p_related_upd_probe.py
+      - tests/test_related_upd1e.py
+      - .github/workflows/related-upd1e.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+      - name: Source-only guard
+        run: python scripts/check_public_tree.py
+      - name: Test link filtering and comparison
+        run: python -m unittest discover -s tests -p test_related_upd1e.py -v
+      - name: Discover and inspect official related UPD package
+        run: python tools/sl3p_related_upd_probe.py --out outputs/related-upd1e.json
+      - name: Remove generated results
+        if: always()
+        run: rm -rf outputs
+
+# The firmware is read in an ephemeral temporary directory and removed.
+# Logs contain derived inventory fields/hashes, never payloads or raw metadata16.
+# No artifact publication, firmware execution, credentials, or Git write-back.
