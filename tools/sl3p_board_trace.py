@@ -19,11 +19,11 @@ from sl3p_oss_audit import OSS_SHA256, MEMBERS
 FILES = {
     'uboot': (
         'u-boot/configs/pvc04v_MC501_defconfig',
-        'u-boot/include/configs/pvc04v_MC501.h',
-        'u-boot/board/socionext/sc2006a/sc2006a.c',
-        'u-boot/arch/arm/cpu/armv8/milbeaut/misc.c',
-        'u-boot/arch/arm/cpu/armv8/milbeaut/lowlevel_init.S',
-        'u-boot/arch/arm/cpu/armv8/milbeaut/Kconfig',
+        'u-boot/arch/arm/mach-milbeaut/Kconfig',
+        'u-boot/arch/arm/mach-milbeaut/milbeaut.c',
+        'u-boot/board/socionext/sc2006a-evb/sc2006a-evb.c',
+        'u-boot/arch/arm/dts/pvc04v-MC501.dtsi',
+        'u-boot/arch/arm/dts/pvc04v-MC501.dts',
     ),
     'linux': (
         'linux-4.19.124/arch/arm64/configs/pvc04v_DC1231_defconfig',
@@ -39,7 +39,7 @@ SENSITIVE = re.compile(r'(?i)(?:private.?key|aes.?key|password)\s*(?:=|\[)|-----
 
 
 def summarize(name: str, data: bytes, line_budget: int = 100) -> dict:
-    text = data.decode('utf-8', 'strict')
+    text = data.decode('utf-8', 'backslashreplace')
     lines = text.splitlines()
     indices = set()
     for i, line in enumerate(lines):
@@ -56,6 +56,7 @@ def summarize(name: str, data: bytes, line_budget: int = 100) -> dict:
             continue
         output.append([i+1, lines[i][:240]])
     return {'path': name, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest(),
+            'text_decoding': 'utf-8 with invalid bytes escaped; hash is over original bytes',
             'total_lines': len(lines), 'matching_context_lines': len(chosen),
             'truncated': len(chosen) > line_budget, 'redacted_lines': redacted,
             'selected_lines': output}
