@@ -5,7 +5,7 @@ import sys
 import unittest
 import zlib
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-from sl3p_lens_records1g import SOF, EOH, RECORD, parse_layout, audit, crc32_msb
+from sl3p_lens_records1g import SOF, EOH, RECORD, parse_layout, audit, crc32_msb, verify_lens
 
 
 def fixture() -> bytes:
@@ -59,6 +59,29 @@ class LensRecordsTests(unittest.TestCase):
     def test_no_input_mutation(self):
         data=fixture();h=hashlib.sha256(data).digest();audit(data)
         self.assertEqual(hashlib.sha256(data).digest(),h)
+
+    def test_kind2_all_ones_is_explicit_absence(self):
+        d=bytearray(fixture());struct.pack_into('>III',d,31+3*19+7,*([0xffffffff]*3))
+        r=verify_lens(bytes(d))
+        self.assertEqual((r['empty_records'],r['sentinel_records']),(1,1))
+        self.assertFalse(r['records'][-1]['present'])
+    def test_other_kind_cannot_use_absence_exception(self):
+        d=bytearray(fixture());d[31+3*19+2]=0
+        struct.pack_into('>III',d,31+3*19+7,*([0xffffffff]*3))
+        with self.assertRaises(ValueError):parse_layout(bytes(d))
+    def test_partial_sentinel_rejected(self):
+        d=bytearray(fixture());struct.pack_into('>I',d,31+3*19+11,0xffffffff)
+        with self.assertRaises(ValueError):parse_layout(bytes(d))
+    def test_verified_crc(self):
+        self.assertTrue(verify_lens(fixture())['all_payload_crc32_verified'])
+    def test_verified_crc_rejects_payload_corruption(self):
+        d=bytearray(fixture());d[-1]^=1
+        with self.assertRaises(ValueError):verify_lens(bytes(d))
+    def test_no_vacuous_verification(self):
+        d=SOF+struct.pack('>HHBBHH',1,2026,9,27,11,1)
+        d+=RECORD.pack(0,2,0,0,0,0)+EOH
+        self.assertTrue(parse_layout(d)['exact_range_coverage'])
+        with self.assertRaises(ValueError):verify_lens(d)
 
 
 if __name__ == '__main__': unittest.main()
