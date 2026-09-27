@@ -17,7 +17,7 @@ class PublicSourceTests(unittest.TestCase):
     def test_duplicate_relationships_preserved(self):
         x=compare_sections({'sections':[self.row(1),self.row(2)]},{'sections':[self.row(3),self.row(4)]})
         self.assertEqual(len(x['matches']),4)
-        self.assertEqual(len(x['nonconstant_matches']),4)
+        self.assertEqual(len(x['not_direct_fill_matches']),4)
     def test_empty_not_promoted(self):
         x=compare_sections({'sections':[self.row(1,0)]},{'sections':[self.row(2,0)]})
         self.assertEqual(x['matches'],[])

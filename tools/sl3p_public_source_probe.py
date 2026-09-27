@@ -77,9 +77,9 @@ def compare_sections(reference: dict, candidate: dict) -> dict:
                 'reference_constant_fill': baseline['constant_fill_byte'],
                 'candidate_constant_fill': row['constant_fill_byte'],
             })
-    nonconstant = [m for m in matches if m['reference_constant_fill'] is None and m['candidate_constant_fill'] is None]
-    return {'matches': matches, 'nonconstant_matches': nonconstant,
-            'caveat': 'Expected digest equality does not prove decryption, common cipher, or portable rendering.'}
+    not_direct_fill = [m for m in matches if m['reference_constant_fill'] is None and m['candidate_constant_fill'] is None]
+    return {'matches': matches, 'not_direct_fill_matches': not_direct_fill,
+            'caveat': 'Expected digest equality does not prove decryption, common cipher, or portable rendering. The not_direct_fill subset describes stored bytes only; an opaque section may decode to a fill.'}
 
 
 def zip_inventory(path: Path) -> dict:
