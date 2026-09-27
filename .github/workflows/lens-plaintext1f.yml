@@ -1,0 +1,48 @@
+name: Lens plaintext evidence 1F
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/upd-lineage1f]
+    paths:
+      - 'tools/sl3p_lens_plaintext1f.py'
+      - 'tests/test_lens_plaintext1f.py'
+      - '.github/workflows/lens-plaintext1f.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - name: Source-only guard
+        run: python scripts/check_public_tree.py
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Full synthetic suite
+        run: |
+          python - <<'PY'
+          import unittest
+          suite = unittest.defaultTestLoader.discover('tests')
+          assert suite.countTestCases() >= 156, suite.countTestCases()
+          result = unittest.TextTestRunner(verbosity=1).run(suite)
+          raise SystemExit(0 if result.wasSuccessful() else 1)
+          PY
+      - name: Verify nonconstant plaintext without publishing binary
+        run: >-
+          python tools/sl3p_lens_plaintext1f.py
+          --baseline evidence/SL3P_421_COMPARISON_BASELINE.json
+          --out outputs/lens-plaintext1f.json
+      - name: Remove generated summaries
+        if: always()
+        run: rm -rf outputs
+
+# No protected-payload execution, firmware artifacts, or repository write-back.
