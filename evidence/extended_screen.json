@@ -1,0 +1,73 @@
+{
+  "tool": "SL3P_EXTENDED_SCREEN1C",
+  "firmware_sha256": "b53a5aa7fe111c9f63b28e7cf889d8af5b5bc9397912738aba595e79923e47d8",
+  "target_section": 8,
+  "sample_offset_in_section": 0,
+  "sample_bytes": 64,
+  "base_visible_header_key_count": 63705,
+  "derived_distinct_keys": 22390,
+  "new_derived_keys_not_in_base": 22290,
+  "total_distinct_keys": 85995,
+  "payload_permutations": [
+    [
+      1,
+      false
+    ],
+    [
+      1,
+      true
+    ],
+    [
+      2,
+      false
+    ],
+    [
+      2,
+      true
+    ],
+    [
+      4,
+      false
+    ],
+    [
+      4,
+      true
+    ],
+    [
+      8,
+      false
+    ],
+    [
+      8,
+      true
+    ],
+    [
+      16,
+      false
+    ],
+    [
+      16,
+      true
+    ]
+  ],
+  "fill_conventions": [
+    0,
+    255
+  ],
+  "modes": [
+    "CBC",
+    "CFB128",
+    "OFB",
+    "CTR-big",
+    "CTR-little"
+  ],
+  "predicate_combinations": 8599500,
+  "prefix_hits": [],
+  "elapsed_seconds": 5.704901890000031,
+  "limitations": [
+    "Tests only the explicitly generated visible-field key and byte-convention families.",
+    "No identification or rejection of AES in general; no exhaustive KDF/keyspace search.",
+    "Two byte-order conventions indistinguishable on constant plaintext would need nonconstant validation.",
+    "No protected program output is created on a negative result."
+  ]
+}

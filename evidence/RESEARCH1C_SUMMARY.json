@@ -1,0 +1,38 @@
+{
+  "record_type": "selected_summary_of_existing_RESEARCH1C_evidence",
+  "date": "2026-09-27",
+  "firmware_filename": "SL3P_421 (1).lfu",
+  "firmware_size": 201752064,
+  "firmware_sha256": "b53a5aa7fe111c9f63b28e7cf889d8af5b5bc9397912738aba595e79923e47d8",
+  "source_archive_sha256": "f141f2628b2c0ba9d752e20bfe1d2f7b4226219bb86ad739c65b1e34c4ef9670",
+  "container": {
+    "crc32": "9de57378",
+    "section_count": 61,
+    "opaque_sections": 46,
+    "direct_hash_matches": 15,
+    "opaque_sections_decoded": 0
+  },
+  "negative_experiments": {
+    "metadata_context_checks": 252,
+    "metadata_context_matches": 0,
+    "global_digest_checks": 14,
+    "global_digest_matches": 0,
+    "public_point_checks": 12,
+    "public_point_matches": 0,
+    "distinct_generated_AES_candidate_keys": 85995,
+    "AES_prefix_hits": 0,
+    "MT19937_checks": 512,
+    "MT19937_hits": 0,
+    "specified_xorshift128_checks": 512,
+    "specified_xorshift128_hits": 0,
+    "bounded_linear_lane_checks": 1024,
+    "bounded_linear_lane_hits": 0
+  },
+  "original_unit_tests": {"run": 77, "passed": 77, "failed": 0},
+  "limitations": [
+    "This is a selected summary, not the complete experiment output or a new firmware run.",
+    "Negative tests exclude only their explicitly implemented hypotheses.",
+    "No cipher, key, protected program, still renderer, autofocus or video implementation has been recovered.",
+    "Synthetic tests do not establish photographic or device fidelity."
+  ]
+}
