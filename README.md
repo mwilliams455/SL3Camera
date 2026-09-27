@@ -2,29 +2,35 @@
 
 SL3-P firmware research and a future device-independent photographic renderer.
 
-**Current milestone: RESEARCH1E. Official SL3 4.2.0 compared with the supplied SL3-P 4.2.1; 129 synthetic tests pass. No protected SL3-P payload has been decoded. There is no SL3-P renderer or APK yet.**
+**Current milestone: RESEARCH1F. The intended contents of the protected 20 MiB lens section are recovered from an independently distributed official lens file plus zero padding, with a complete expected SHA-256 match. This is NOT decryption or a camera renderer. All 156 synthetic tests pass. No SL3-P cipher/key, base still-image pipeline or APK has been recovered.**
 
-This repository contains inspection tools, synthetic tests and reviewed derived evidence. It does not contain Leica firmware, extracted proprietary payloads, downloaded Looks, private photographs, video, credentials or signing keys. It is not a Photon fork.
+This repository contains inspection tools, synthetic tests and reviewed derived evidence. It contains no Leica firmware, extracted proprietary payloads, downloaded Looks, private photographs, video, credentials or signing keys. It is not a Photon fork.
 
 ## Start here
 
-- [RESEARCH1E results and next investigation](docs/RESEARCH1E_REPORT.md)
-- [Selected RESEARCH1E measurements and completed run identifiers](evidence/RESEARCH1E_SUMMARY.json)
+- [RESEARCH1F report](docs/RESEARCH1F_REPORT.md)
+- [RESEARCH1F continuation handoff](docs/RESEARCH1F_HANDOFF.md)
+- [Selected completed-job measurements](evidence/RESEARCH1F_SUMMARY.json)
 - [SL3-P 4.2.1 comparison fingerprints](evidence/SL3P_421_COMPARISON_BASELINE.json)
+- [Earlier SL3/SL3-P comparison](docs/RESEARCH1E_REPORT.md)
 - [Project roadmap](docs/ROADMAP.md)
 - [Original import provenance](docs/IMPORT.md)
 
-Earlier [RESEARCH1C status](docs/RESEARCH_STATUS.md) and [handoff](docs/RESEARCH1C_HANDOFF.md) remain historical records; RESEARCH1E supersedes their current-status and source-access statements. The previously unpushed RESEARCH1D pair of tools and 29 tests are now included without source changes.
+Earlier reports remain historical records. RESEARCH1F supersedes statements that no nonconstant intended section content is available, while the camera protection method and still renderer remain unresolved.
 
-## Current findings
+## Current finding
 
-SL3 and SL3-P share the measured 61-entry UPD layout. Of 46 protected SL3-P sections, 25 have size and expected-content-hash matches in SL3; 23 remain after excluding the two already-known all-FF regions. All eight numbered hm_d_nw candidates and hm_d_reid match expected-content hashes, but no recognition model or autofocus implementation has been decoded. Main program and loader hashes differ. Different models and versions prevent attributing all changes solely to the P model.
+Official SLLens11.plf has 4,575,234 bytes. Appending 16,396,286 zero bytes produces exactly the complete expected hash of SL3-P section33 lens, also measured in SL3 and SL2. The standalone source identity was pinned and the full target verified in a second successful GitHub job. Most of the 20 MiB region is padding, not executable code.
 
-Both lut_data regions are verified zero fills, but their sizes differ: SL3 2.125 MiB versus SL3-P 8.375 MiB. This does not identify Look format, count, precision or update policy. M11-P 2.6.4 was successfully decompressed, but no exact UPD-family marker or compatible protection consumer was established by the bounded scan.
+The source begins with LENS-UPDATE-FILE-SOF: and has LENS-UPDATE-FILE-EOH: at offset791. Record layout, payload architecture and update-consumer semantics are still unvalidated. A firmware-update term does not identify a camera UPD decryption routine.
 
-## Run the synthetic tests
+SL2 6.3.0 and Q2 Monochrom5.1.0 pass the observed UPD parser but expose no directly hash-verified nonconstant bytes. Their small loader1 expected hashes match each other; this is an identity lead, not a readable or SL3-P-compatible loader. The SL601 endpoint tested returned HTML-like content and was rejected as firmware.
 
-Use Python 3.13 in an isolated environment:
+The prior shared recognition-resource expected hashes and differing LUT-region sizes remain findings about packaged resources, not recovered autofocus or Look implementations.
+
+## Run synthetic tests
+
+Use Python3.13 in an isolated environment:
 
 ```sh
 python -m venv .venv
@@ -34,7 +40,7 @@ python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 ```
 
-The suite has 129 tests: 77 inherited through RESEARCH1C, 29 from RESEARCH1D, and 23 new RESEARCH1E tests. They generate their own fixtures in temporary directories; no real firmware or camera is needed. Passing tests validate tools and reference mathematics, not SL3-P image fidelity, autofocus, video or Android performance.
+The suite has156 tests:129 inherited through RESEARCH1E and27 new in RESEARCH1F. Fixtures are synthetic; no firmware or camera is needed. Passing tests validate tools and reference mathematics, not photographic fidelity, autofocus, video or Android performance.
 
 ## Local firmware inspection
 
@@ -44,18 +50,24 @@ Keep original firmware outside the checkout, or in ignored inputs/. Never force-
 python tools/sl3p_inspect.py '/absolute/path/SL3P_421 (1).lfu' --out outputs/inspection
 ```
 
-Input is read-only. Optional extraction removes only the outer byte inversion; protected sections remain opaque. Keep outputs under ignored outputs/, extracted/ or private/, and review evidence before publishing it.
+Input is read-only. Optional extraction removes only outer byte inversion; it does not decrypt protected sections. Keep outputs in ignored directories and review evidence before publishing it.
 
 ## Separate real-source experiments
 
-Research tests CI is synthetic and does not download firmware. The three 1E source-evidence workflows are separate, read-only jobs: they download named public Leica sources, inspect them without execution, and log only selected hashes/counts/offsets and comparison results. They publish no firmware artifacts and perform no Git write-back. Their push triggers are restricted to the research/loader-consumer1e branch and named probe files. The pinned pair probe checks both the measured SL3 file SHA-256 and the canonical SL3-P fingerprint projection.
+Research tests CI is synthetic and does not download firmware. Explicit source-evidence workflows are separate, read-only jobs: they fetch named public Leica sources, inspect without execution, and log selected hashes/counts/offsets or header candidates. They publish no binary artifacts or raw UPD cryptographic metadata and perform no Git write-back. Probe push triggers are restricted to their research branches and named files.
 
-Full job logs are referenced by run ID in the report; committed summaries are selected measurements, not complete log archives. CRC and content hashes do not authenticate a vendor signature.
+The independently pinned lens verification is:
+
+```sh
+python tools/sl3p_lens_plaintext1f.py --baseline evidence/SL3P_421_COMPARISON_BASELINE.json --out outputs/lens-check.json
+```
+
+This command performs network access, requires the exact recorded source and target hashes, reconstructs in memory and outputs only a numerical report. It does not save firmware. Full job logs are identified in the report; committed summaries are reviewed selections, not complete archives. CRC and content hashes do not authenticate a vendor signature.
 
 ## Development sequence
 
-Base still-image renderer -> Photon integration -> optional Leica Looks -> video. Autofocus/recognition is a separate investigation. Source-device and active-lens calibration must remain separate from the portable Leica target. Do not introduce HDR, a Cobalt dependency, or an M-series substitute for the unknown SL3-P renderer.
+Base still-image renderer -> Photon integration -> optional Leica Looks -> video. Autofocus/recognition is separate. Source-device and active-lens calibration must remain separate from the portable Leica target. Do not introduce HDR, Cobalt or an M-series substitute for the unknown base renderer.
 
-The next substantive target is a readable, validated UPD-family loading/protection consumer. Do not relaunch the same unsuccessful key screens as new research. A different model's firmware is a comparison source, never permission to flash it onto an SL3-P.
+Next: validate the recovered LENS layout and executable candidates, while pursuing an actual UPD protection consumer. Known plaintext provides a useful exact test but does not reveal a key by itself. Do not relaunch previous blind key screens as new research. Related model firmware is never permission to cross-flash cameras. No4.2.2 or Look upload is required.
 
-`tools/llog_reference.py` preserves published video reference mathematics; it is not an extracted SL3-P still transform. `.gitignore` and the tracked-file guard reduce accidental uploads but do not replace manual privacy/licensing review. No software license was selected during initialization.
+`tools/llog_reference.py` preserves published video mathematics, not an extracted SL3-P still transform. `.gitignore` and the tracked-file guard reduce accidental uploads but do not replace manual privacy/licensing review. No software license was selected during initialization.
