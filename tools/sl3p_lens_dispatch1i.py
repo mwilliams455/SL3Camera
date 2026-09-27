@@ -50,14 +50,14 @@ def inspect(image):
                 ins=one(address)
                 if ins is not None and ins.mnemonic.startswith('ldr'):
                     refs.append({'instruction':address,**h,'candidate_only':True})
-    names=[{'address':a,'name':cstring(image,a)} for a in (0x41a30,0x41458)]
+    names=[{'address':a,'name':cstring(image,a)} for a in (0x41a30,0x41458,0x1de30,0x1de34)]
     prologue=[]
     for a in range(0x1db18-256,0x1db18,2):
         ins=one(a)
         if ins is not None and ins.mnemonic.startswith('push') and 'lr' in ins.op_str:
             prologue.append(a)
-    return {'ascii_helper':window(0x2e830,12,0x2e848),
-            'tokenizer':window(0x25b74,40,0x25bc0),
+    return {'ascii_helper':window(0x2e830,12,0x2e83c),
+            'tokenizer':window(0x25b74,40,0x25bba),
             'dispatch_start':window(0x1db18,42),
             'fwupdate_branch':window(0x1e63e,40,0x1e68e),
             'name_method':window(0x1e68e,2),
@@ -65,6 +65,8 @@ def inspect(image):
             'descriptor_references':refs,
             'descriptor_reference_windows':[{'reference':r['instruction'],'instructions':window(r['instruction']-8,18)} for r in refs[:6]],
             'preceding_prologues':prologue,
+            'memory_constructor':window(0x1daf8,16,0x1db18),
+            'constructor_caller_context':window(0xb878,52),
             'limits':['Descriptor references are static candidates, not proof of runtime object identity.',
                       'Selected name method and comparator do not establish an update transport.']}
 
