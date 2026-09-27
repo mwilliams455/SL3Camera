@@ -31,9 +31,30 @@ jobs:
           python-version: '3.13'
       - name: Source-only guard
         run: python scripts/check_public_tree.py
-      - name: Test bounded inner-format predicates
-        run: python -m unittest discover -s tests -p test_lens_inner1h.py -v
+      - name: Install pinned static-analysis dependencies
+        run: python -m pip install -r requirements.txt capstone==5.0.9
+      - name: Run complete synthetic suite
+        run: python -m unittest discover -s tests -q
+      - name: Independent Thumb literal decoder cross-check
+        run: |
+          python - <<'PY'
+          import sys
+          import capstone as cs
+          sys.path.insert(0,'tools')
+          from sl3p_lens_code1h import literal_load
+          md=cs.Cs(cs.CS_ARCH_ARM,cs.CS_MODE_THUMB | cs.CS_MODE_MCLASS)
+          md.detail=True
+          fixtures=[(bytes.fromhex('0149'),1,28),(bytes.fromhex('dff80420'),2,28),(bytes.fromhex('5ff80420'),2,20)]
+          for code,reg,pool in fixtures:
+              data=b'\0'*20+code+b'\0'*100
+              ins=next(md.disasm(code,0x8000,count=1))
+              assert ins.mnemonic.startswith('ldr')
+              assert literal_load(data,20,0x8000,20)==(reg,pool,len(code))
+          print('Independent Capstone Thumb fixture cross-check: 3/3')
+          PY
       - name: Inspect checksum-verified payload formats in memory
         run: python tools/sl3p_lens_inner1h.py
+      - name: Trace static candidate code and string references
+        run: python tools/sl3p_lens_code1h.py
 
 # No firmware execution, binary artifacts, camera writes or repository write-back.
