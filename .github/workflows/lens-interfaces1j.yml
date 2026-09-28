@@ -1,0 +1,32 @@
+name: Lens interface evidence 1J
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/lens-interfaces1j]
+    paths:
+      - 'tools/sl3p_lens_interfaces1j.py'
+      - 'tools/sl3p_lens_storage1j.py'
+      - 'tests/test_lens_interfaces1j.py'
+      - '.github/workflows/lens-interfaces1j.yml'
+permissions:
+  contents: read
+concurrency:
+  group: lens-interfaces1j-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+      - run: python scripts/check_public_tree.py
+      - run: python -m pip install -r requirements-analysis.txt
+      - run: python -m unittest discover -s tests -q
+      - name: Inspect selected interface references without running firmware
+        run: python tools/sl3p_lens_interfaces1j.py
+# No firmware artifacts, camera access, credentials retention or Git write-back.
