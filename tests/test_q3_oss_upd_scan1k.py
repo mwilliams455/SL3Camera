@@ -20,8 +20,8 @@ class Q3OSSScan1KTests(unittest.TestCase):
     def test_no_hit(self):
         self.assertEqual(m.scan_tar(make_tar({"a":b"hello"}),"x")["hits"],[])
     def test_select_members(self):
-        names=["x/u-boot.tar.gz","x/linux.tar.gz","x/z"]
+        names=["x/u-boot.tar.gz","x/linux-4.19.124.tar.gz","x/z"]
         self.assertEqual(m.select_members(names),names[:2])
     def test_ambiguous_member_rejected(self):
-        with self.assertRaises(ValueError):m.select_members(["a/u-boot.tar.gz","b/u-boot.tar.gz","a/linux.tar.gz"])
+        with self.assertRaises(ValueError):m.select_members(["a/u-boot.tar.gz","b/u-boot.tar.gz","a/linux-4.19.124.tar.gz"])
 if __name__=="__main__":unittest.main()
