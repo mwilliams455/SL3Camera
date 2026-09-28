@@ -1,0 +1,19 @@
+name: GH3 nested UPD header probe 1K
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/panasonic-lineage1k]
+    paths: ['tools/sl3p_gh3_nested1k.py','.github/workflows/gh3-nested1k.yml']
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: '3.13'}
+      - run: python scripts/check_public_tree.py
+      - run: python tools/sl3p_gh3_nested1k.py
+# Bounded official GH3 metadata only; no firmware binary is uploaded.
