@@ -12,7 +12,7 @@ from sl3p_inspect import inspect
 
 URLS={
  "q3":"https://leica-camera.com/sites/default/files/Q3___411.lfu",
- "sl3":"https://leica-camera.com/sites/default/files/SL3_420.lfu",
+ "sl3":"https://leica-camera.com/sites/default/files/SL3__420.lfu",
  "sl3p422":"https://leica-camera.com/sites/default/files/SL3P_422.lfu",
 }
 BASE421=Path("evidence/SL3P_421_COMPARISON_BASELINE.json")
