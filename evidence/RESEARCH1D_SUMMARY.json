@@ -1,0 +1,70 @@
+{
+  "milestone": "RESEARCH1D",
+  "date": "2026-09-27",
+  "scope": "Selected metadata transcribed from successful Actions logs and checked against the local target inventory. Not a full log archive or source release.",
+  "target": {"identifier": "MC7251", "bytes": 201752064, "sha256": "b53a5aa7fe111c9f63b28e7cf889d8af5b5bc9397912738aba595e79923e47d8"},
+  "sl3_comparison": {
+    "url": "https://leica-camera.com/sites/default/files/SL3__420.lfu",
+    "identifier": "MC7231",
+    "bytes": 195198464,
+    "sha256": "120a43f442036f62c0092d8976342e264082cfd45f0c3e8471c705efb40a6bc5",
+    "run_id": 36333369461,
+    "job_id": 108659460773,
+    "directory_entries": 61,
+    "opaque_sections": 46,
+    "directly_verified_sections": 15,
+    "direct_nonconstant_sections": 0,
+    "different_expected_hashes": ["loader1", "program", "compress_pr"],
+    "nw_record_bytes_each": 1441792,
+    "reid_record_bytes": 3145728,
+    "shared_expected_hashes": {
+      "hm_d_nw_1st": "6f8c3c074542db9423d5ca3bc8d75f679d197255c57d00334d34697d2c532d6a",
+      "hm_d_nw_2nd": "2434108bf6e3d3c203a6ffcf6b073386da34fa2cd20c141bc46dd6de369af5d0",
+      "hm_d_nw_3rd": "c564b2416df3b9560ca65cf3ca37e9043a94046b07965365f98d9638bd98c0c2",
+      "hm_d_nw_4th": "c999927b02641d75d48ec4520b9eb3aa5360ac2d13950e09b6e7cf41e15a90ca",
+      "hm_d_nw_5th": "0b65f1777fdcce85febd39bfb5ea2f4024e272357aa949ead329b9e9e5aebce8",
+      "hm_d_nw_6th": "307dceee9b047ab5649eafbe82eb16709730d794c36c3a2205ceb505a848758b",
+      "hm_d_nw_7th": "8ee84bc7b9e35db690471c938e4f95892c580004da5bb7d8c456c52b99ec2934",
+      "hm_d_nw_8th": "6e8752e886e71284db14556b910232587db4f15f6f7e08c80c0e43521a76188c",
+      "hm_d_reid": "583bc02d84e5cb96e2d25b89bacaeedb4094d01ab828462578d42c6b9bf8febf"
+    },
+    "total_shared_candidate_bytes": 14680064,
+    "caveat": "Expected-content fingerprints, not decrypted data, model formats, runtime equivalence or identical protected payloads."
+  },
+  "public_source": {
+    "url": "https://leica-camera.com/sites/default/files/pm-19562-OSS_codes.zip",
+    "bytes": 277144657,
+    "sha256": "ab6531df4770a0dd0e67d090f470321bc294078e020b2f21286f1dc8d0e7bb18",
+    "audit_run_id": 36333640794,
+    "trace_run_id": 36334141716,
+    "trace_jobs": {"uboot": 108661633802, "linux": 108661633928},
+    "selected_file_hashes": {
+      "u-boot/configs/pvc04v_MC501_defconfig": "19dd82ae2f92bc8b9cafd5d2a60202006688287cdd8a0a801cc442fe338b8771",
+      "u-boot/arch/arm/mach-milbeaut/Kconfig": "5b791e57f10032d4a3dafea54aae71f30ff4f9ed75815e250a8e0ee539600edb",
+      "u-boot/arch/arm/dts/pvc04v-MC501.dtsi": "c883c5de3a8ece373068656f43e361d0c293931d831d3a3aa0418e4370c72f6b",
+      "u-boot/arch/arm/dts/pvc04v-MC501.dts": "02686b3623c9ed2f7bc5c6073004e482850d27a4ee6a25c275a7dc9bb433c6a7",
+      "linux-4.19.124/arch/arm64/configs/pvc04v_DC1231_defconfig": "7bbfb8d0c7969c5ca0db962634d60f3d7e80a44fcc6b42fbf9352d9ebc72659d",
+      "linux-4.19.124/arch/arm64/boot/dts/socionext/pvc04v-DC1231-rtos.h": "22356937605e6c95813aadff928214d5e6c9e33c02a3c7a4ea0b3b6045ea8865",
+      "linux-4.19.124/drivers/block/ipcu.c": "a9ffb9c7f0ec088e351063a119d016a8827a1864a855e5c518d81a6e24447ba1",
+      "linux-4.19.124/drivers/snihotplug/sni_hotplug.c": "5fa9eea349649ea7ee163fb34bcc3bfd4e4fa0ef48cafed38c486043046957cf"
+    },
+    "verified_source_observations": [
+      "MC501 defconfig line 43 decompresses a memory-resident kernel then boots it with a separate device tree.",
+      "DC1231 RTOS header has IPCU buffer, synchronization and movie-address offsets.",
+      "IPCU block driver request definitions distinguish reading from and writing to RTOS.",
+      "Milbeaut evaluation-board hotplug driver implements RTOS/Linux CPU coordination and SMC wrapper calls."
+    ],
+    "binding_to_sl3p": "Not established. Neither exact chip, selected build nor section-to-OS mapping is proven."
+  },
+  "validation": {
+    "tests_passed_local": 99,
+    "tests_passed_each_trace_job": 99,
+    "trace_commit": "a4341f44ea281ca79b4b8d0d122ccdd57f42ddff",
+    "corrected_trace_conclusion": "success",
+    "initial_failed_trace_run": 36333965675,
+    "fixed_failures": ["Incorrect selected U-Boot paths", "Non-UTF-8 Linux source comments"],
+    "meaning": "Inspection and reference-maths validation only; not photographic fidelity."
+  },
+  "unresolved": ["LFU decryption implementation", "Meaning of per-section 16-byte metadata", "SL3-P base still-image pipeline", "AF model structure", "Look insertion stage"],
+  "safety": "No firmware, vendor payloads, Looks, photos, video, credentials or keys committed. No downloaded code executed."
+}
