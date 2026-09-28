@@ -7,6 +7,7 @@ on:
       - 'tools/sl3p_lens_interfaces1j.py'
       - 'tools/sl3p_lens_storage1j.py'
       - 'tools/sl3p_lens_destination1j.py'
+      - 'tools/sl3p_lens_verify1j.py'
       - 'tests/test_lens_interfaces1j.py'
       - '.github/workflows/lens-interfaces1j.yml'
 permissions:
@@ -27,7 +28,41 @@ jobs:
           python-version: '3.13'
       - run: python scripts/check_public_tree.py
       - run: python -m pip install -r requirements-analysis.txt
-      - run: python -m unittest discover -s tests -q
-      - name: Inspect resolved destinations without running firmware
-        run: python tools/sl3p_lens_destination1j.py
-# No firmware artifacts, camera access, credentials retention or Git write-back.
+      - name: Require the complete 261-test baseline
+        run: |
+          python - <<'PY'
+          import unittest,sys
+          suite=unittest.defaultTestLoader.discover('tests')
+          assert suite.countTestCases()>=261,suite.countTestCases()
+          result=unittest.TextTestRunner(verbosity=1).run(suite)
+          sys.exit(0 if result.wasSuccessful() else 1)
+          PY
+      - name: Check synthetic relocated literal and branch operands independently
+        run: |
+          python - <<'PY'
+          import sys,struct,capstone as cs
+          from capstone.arm import ARM_REG_PC
+          sys.path.insert(0,'tools')
+          from sl3p_sparse_code1h import SparseImage,literal
+          from sl3p_lens_destination1j import relocate_known_ranges
+          from sl3p_lens_callsite1i import bl_target
+          original=SparseImage([(0x1000,bytes.fromhex('0148704700000000')+struct.pack('<I',0x12345678))])
+          moved,coverage=relocate_known_ranges(original,0x1000,0x20001000,16)
+          md=cs.Cs(cs.CS_ARCH_ARM,cs.CS_MODE_THUMB|cs.CS_MODE_MCLASS);md.detail=True
+          instruction=next(md.disasm(moved.read(0x20001000,2),0x20001000,count=1))
+          h=literal(moved,0x20001000)
+          assert instruction.operands[1].mem.base==ARM_REG_PC
+          assert h['pool_address']==0x20001004+instruction.operands[1].mem.disp
+          assert h['value']==0x12345678
+          assert coverage['known_bytes']==12 and coverage['unknown_bytes']==4
+          assert moved.read(0x2000100c,1) is None
+          raw=bytes.fromhex('00f000f8')
+          for address in (0x1000,0x20001000):
+              decoded=next(md.disasm(raw,address,count=1))
+              assert decoded.mnemonic=='bl'
+              assert bl_target(raw,address)==decoded.operands[0].imm==address+4
+          print('Relocated literal, preserved missing tail and two BL operand checks passed')
+          PY
+      - name: Verify pinned interfaces without running firmware
+        run: python tools/sl3p_lens_verify1j.py
+# No firmware artifacts, emulation, camera access, credential retention or Git write-back.
