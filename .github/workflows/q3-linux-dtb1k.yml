@@ -3,8 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [research/panasonic-lineage1k]
-    paths:
-      - '.github/workflows/q3-linux-dtb1k.yml'
+    paths: ['.github/workflows/q3-linux-dtb1k.yml']
 permissions: {contents: read}
 jobs:
   build:
@@ -42,23 +41,19 @@ jobs:
           tar -xzf /tmp/linux.tar.gz -C /tmp
           cd /tmp/linux-4.19.124
           make -f Makefile ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- pvc04v_DC1231_defconfig
-          make -f Makefile ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j2 dtbs
+          make -f Makefile ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- PVCPF_SUBMODEL=DC1231 PVCPF_HW_VERSION= -j2 dtbs
           python - <<'PY'
           import hashlib,json,os,glob,struct
           wanted=glob.glob('arch/arm64/boot/dts/socionext/pvc04v-DC123*.dtb')
           out={}
           for p in wanted:
-              d=open(p,'rb').read()
-              magic,total=struct.unpack('>II',d[:8])
+              d=open(p,'rb').read(); magic,total=struct.unpack('>II',d[:8])
               out[p]={'bytes':len(d),'sha256':hashlib.sha256(d).hexdigest(),
-                      'fdt_magic':hex(magic),'fdt_totalsize':total,
-                      'first64_hex':d[:64].hex()}
+                      'fdt_magic':hex(magic),'fdt_totalsize':total,'first64_hex':d[:64].hex()}
           print('Q3_LINUX_DTB1K_JSON_BEGIN')
           print(json.dumps({'compiler':os.popen('aarch64-linux-gnu-gcc --version').read().splitlines()[0],
-                            'program_base':hex(0x400200000),
-                            'documented_dtb_address':hex(0x401290000),
-                            'relative_offset':hex(0x401290000-0x400200000),
-                            'outputs':out},separators=(',',':')))
+                            'program_base':hex(0x400200000),'documented_dtb_address':hex(0x401290000),
+                            'relative_offset':hex(0x401290000-0x400200000),'outputs':out},separators=(',',':')))
           print('Q3_LINUX_DTB1K_JSON_END')
           PY
           rm -rf /tmp/q3oss.zip /tmp/linux.tar.gz /tmp/linux-4.19.124
