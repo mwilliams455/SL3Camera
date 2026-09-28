@@ -1,0 +1,23 @@
+name: Q3 Panasonic Linux comparison 1K
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/panasonic-lineage1k]
+    paths:
+      - 'tools/sl3p_q3_panasonic_linux1k.py'
+      - '.github/workflows/q3-panasonic-linux1k.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: '3.13'}
+      - run: python scripts/check_public_tree.py
+      - name: Compare Leica and Panasonic published Linux source
+        run: python tools/sl3p_q3_panasonic_linux1k.py
+# Open-source source-code comparison only. No camera firmware.
