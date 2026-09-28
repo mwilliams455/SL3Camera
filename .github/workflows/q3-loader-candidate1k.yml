@@ -1,0 +1,47 @@
+name: Q3 loader plaintext candidate 1K
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/panasonic-lineage1k]
+    paths:
+      - 'tools/sl3p_q3_loader_candidate1k.py'
+      - 'tests/test_q3_loader_candidate1k.py'
+      - '.github/workflows/q3-loader-candidate1k.yml'
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - run: python scripts/check_public_tree.py
+      - name: Run complete synthetic suite
+        run: python -m unittest discover -s tests -q
+      - name: Install Q3 U-Boot cross-build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-aarch64-linux-gnu bc bison flex device-tree-compiler libssl-dev
+      - name: Build Leica-published Q3 U-Boot and measure loader candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import urllib.request
+          u='https://leica-camera.com/sites/default/files/pm-19562-OSS_codes.zip'
+          req=urllib.request.Request(u,headers={'User-Agent':'SL3Camera-research/1K'})
+          with urllib.request.urlopen(req,timeout=240) as r, open('/tmp/q3oss.zip','wb') as f:
+              while True:
+                  b=r.read(1024*1024)
+                  if not b: break
+                  f.write(b)
+          PY
+          unzip -q /tmp/q3oss.zip '*/u-boot.tar.gz' -d /tmp/q3oss
+          tar -xzf /tmp/q3oss/*/u-boot.tar.gz -C /tmp
+          cd /tmp/u-boot
+          make -f Makefile pvc04v_MC501_defconfig
+          make -f Makefile -j2 ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- HOSTCFLAGS='-fcommon' PVCPF_SUBMODEL=MC501 PVCPF_HW_VERSION=
+          cd "$GITHUB_WORKSPACE"
+          python tools/sl3p_q3_loader_candidate1k.py /tmp/u-boot/u-boot.bin /tmp/u-boot/u-boot-nodtb.bin /tmp/u-boot/u-boot.dtb
+          rm -rf /tmp/q3oss.zip /tmp/q3oss /tmp/u-boot
+# Build products are measured and deleted; no firmware or binary artifact is uploaded.
