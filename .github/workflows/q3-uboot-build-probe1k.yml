@@ -36,7 +36,7 @@ jobs:
           tar -xzf /tmp/q3oss/*/u-boot.tar.gz -C /tmp
           cd /tmp/u-boot
           make -f Makefile pvc04v_MC501_defconfig
-          make -f Makefile -j2 ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- HOSTCFLAGS='-fcommon'
+          make -f Makefile -j2 ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- HOSTCFLAGS='-fcommon' PVCPF_SUBMODEL=MC501 PVCPF_HW_VERSION=
           python - <<'PY'
           import hashlib,json,os
           names=['u-boot','u-boot.bin','u-boot-dtb.bin','u-boot-nodtb.bin','u-boot.map','u-boot.dtb']
