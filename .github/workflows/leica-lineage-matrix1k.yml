@@ -1,0 +1,23 @@
+name: Leica protected-section lineage matrix 1K
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/panasonic-lineage1k]
+    paths:
+      - 'tools/sl3p_lineage_matrix1k.py'
+      - 'tests/test_lineage_matrix1k.py'
+      - '.github/workflows/leica-lineage-matrix1k.yml'
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - run: python scripts/check_public_tree.py
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -q
+      - name: Fetch official Q3, SL3 and SL3-P sources and build lineage matrix
+        run: python tools/sl3p_lineage_matrix1k.py
+# Firmware stays in the ephemeral runner; only expected-content fingerprints and classifications are printed.
