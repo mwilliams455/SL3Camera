@@ -16,6 +16,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with: {persist-credentials: false}
       - run: python scripts/check_public_tree.py
+      - name: Install pinned Python dependencies
+        run: python -m pip install -r requirements.txt
       - name: Run complete synthetic suite
         run: python -m unittest discover -s tests -q
       - name: Install Q3 U-Boot cross-build dependencies
