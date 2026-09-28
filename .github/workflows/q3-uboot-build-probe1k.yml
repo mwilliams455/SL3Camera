@@ -35,8 +35,8 @@ jobs:
           unzip -q /tmp/q3oss.zip '*/u-boot.tar.gz' -d /tmp/q3oss
           tar -xzf /tmp/q3oss/*/u-boot.tar.gz -C /tmp
           cd /tmp/u-boot
-          make pvc04v_MC501_defconfig
-          make -j2 ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- HOSTCFLAGS='-fcommon'
+          make -f Makefile pvc04v_MC501_defconfig
+          make -f Makefile -j2 ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- HOSTCFLAGS='-fcommon'
           python - <<'PY'
           import hashlib,json,os
           names=['u-boot','u-boot.bin','u-boot-dtb.bin','u-boot-nodtb.bin','u-boot.map','u-boot.dtb']
