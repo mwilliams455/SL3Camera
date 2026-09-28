@@ -1,0 +1,60 @@
+name: Q3 U-Boot reproducibility probe 1K
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/panasonic-lineage1k]
+    paths:
+      - '.github/workflows/q3-uboot-build-probe1k.yml'
+permissions: {contents: read}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - run: python scripts/check_public_tree.py
+      - name: Install cross-build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-aarch64-linux-gnu bc bison flex device-tree-compiler libssl-dev
+      - name: Build Leica-published Q3 U-Boot source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import urllib.request
+          u='https://leica-camera.com/sites/default/files/pm-19562-OSS_codes.zip'
+          req=urllib.request.Request(u,headers={'User-Agent':'SL3Camera-research/1K'})
+          with urllib.request.urlopen(req,timeout=240) as r, open('/tmp/q3oss.zip','wb') as f:
+              while True:
+                  b=r.read(1024*1024)
+                  if not b: break
+                  f.write(b)
+          PY
+          unzip -q /tmp/q3oss.zip '*/u-boot.tar.gz' -d /tmp/q3oss
+          tar -xzf /tmp/q3oss/*/u-boot.tar.gz -C /tmp
+          cd /tmp/u-boot
+          make pvc04v_MC501_defconfig
+          make -j2 ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- HOSTCFLAGS='-fcommon'
+          python - <<'PY'
+          import hashlib,json,os
+          names=['u-boot','u-boot.bin','u-boot-dtb.bin','u-boot-nodtb.bin','u-boot.map','u-boot.dtb']
+          out={}
+          for n in names:
+              if os.path.isfile(n):
+                  d=open(n,'rb').read()
+                  out[n]={'bytes':len(d),'sha256':hashlib.sha256(d).hexdigest()}
+                  if n.endswith('.bin') and len(d)<=131072:
+                      for fill in (0,255):
+                          p=d+bytes([fill])*(131072-len(d))
+                          out[n][f'sha256_pad_128k_{fill:02x}']=hashlib.sha256(p).hexdigest()
+          print('Q3_UBOOT_BUILD_PROBE1K_JSON_BEGIN')
+          print(json.dumps({'compiler':os.popen('aarch64-linux-gnu-gcc --version').read().splitlines()[0],
+                            'loader1_expected_bytes':131072,
+                            'loader1_expected_sha256':'724e574baa46cb9aa6f20af241cd50e678ab115e24e6c1b3eed6fbd82af5ed97',
+                            'outputs':out},separators=(',',':')))
+          print('Q3_UBOOT_BUILD_PROBE1K_JSON_END')
+          PY
+          rm -rf /tmp/q3oss.zip /tmp/q3oss /tmp/u-boot
+# Build output is measured then deleted; no binary artifact is uploaded.
