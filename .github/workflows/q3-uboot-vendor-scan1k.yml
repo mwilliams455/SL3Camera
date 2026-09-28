@@ -1,0 +1,23 @@
+name: Q3 U-Boot vendor update scan 1K
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/panasonic-lineage1k]
+    paths:
+      - 'tools/sl3p_q3_uboot_vendor_scan1k.py'
+      - 'tests/test_q3_uboot_vendor_scan1k.py'
+      - '.github/workflows/q3-uboot-vendor-scan1k.yml'
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - run: python scripts/check_public_tree.py
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -q
+      - name: Inventory official Q3 U-Boot vendor/update source
+        run: python tools/sl3p_q3_uboot_vendor_scan1k.py
+# Published OSS source only; no camera LFU is downloaded.
