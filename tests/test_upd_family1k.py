@@ -5,10 +5,10 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 from sl3p_inspect import XOR_FF,FormatError
 from sl3p_upd_family1k import inspect_family
 
-def fixture(marker=b'leica\\0',invert=False,bad_nested=False,legacy=False):
+def fixture(marker=b'leica\0',invert=False,bad_nested=False,legacy=False):
     start=0x400;b=bytearray(start+16)
-    b[:4]=b'UPD\\0';b[12:18]=b'TEST01';b[0x200:0x200+len(marker)]=marker
-    b[0x2a0:0x2a4]=b'BAD!' if bad_nested else b'UPD\\0';b[0x2ac:0x2b2]=b'TEST01'
+    b[:4]=b'UPD\0';b[12:18]=b'TEST01';b[0x200:0x200+len(marker)]=marker
+    b[0x2a0:0x2a4]=b'BAD!' if bad_nested else b'UPD\0';b[0x2ac:0x2b2]=b'TEST01'
     struct.pack_into('<III',b,0x38,0x200,len(b)-0x200,0)
     struct.pack_into('<III',b,0x2e0,0 if legacy else start-0x200,0 if legacy else 16,1)
     at=0x2ec;b[at:at+4]=b'data';struct.pack_into('<4I',b,at+12,start-0x200,16,0,2)
@@ -19,8 +19,8 @@ def fixture(marker=b'leica\\0',invert=False,bad_nested=False,legacy=False):
 
 def legacy_gap_fixture():
     start=0x400;b=bytearray(start+48)
-    b[:4]=b'UPD\\0';b[12:18]=b'TEST01';b[0x200:0x209]=b'panasonic'
-    b[0x2a0:0x2a4]=b'UPD\\0';b[0x2ac:0x2b2]=b'TEST01'
+    b[:4]=b'UPD\0';b[12:18]=b'TEST01';b[0x200:0x209]=b'panasonic'
+    b[0x2a0:0x2a4]=b'UPD\0';b[0x2ac:0x2b2]=b'TEST01'
     struct.pack_into('<III',b,0x38,0x200,len(b)-0x200,0)
     struct.pack_into('<III',b,0x2e0,0,0,2)
     p1=b'A'*16;p2=b'B'*16
