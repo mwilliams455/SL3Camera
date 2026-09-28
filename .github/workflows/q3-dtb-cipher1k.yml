@@ -1,0 +1,60 @@
+name: Q3 mapped DTB candidate plaintext probe 1K
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/panasonic-lineage1k]
+    paths:
+      - 'tools/sl3p_q3_dtb_cipher1k.py'
+      - 'tests/test_q3_dtb_cipher1k.py'
+      - '.github/workflows/q3-dtb-cipher1k.yml'
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: '3.13'}
+      - run: python scripts/check_public_tree.py
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -q
+      - name: Install Q3 DTB build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-aarch64-linux-gnu bc bison flex libssl-dev
+      - name: Build Q3 DTB and analyze mapped protected program segment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import urllib.request,zipfile
+          req=urllib.request.Request('https://leica-camera.com/sites/default/files/pm-19562-OSS_codes.zip',headers={'User-Agent':'SL3Camera-research/1K'})
+          with urllib.request.urlopen(req,timeout=300) as r, open('/tmp/q3oss.zip','wb') as f:
+              while True:
+                  b=r.read(1024*1024)
+                  if not b:break
+                  f.write(b)
+          with zipfile.ZipFile('/tmp/q3oss.zip') as z:
+              n=next(n for n in z.namelist() if n.endswith('linux-4.19.124.tar.gz'))
+              with z.open(n) as src,open('/tmp/linux.tar.gz','wb') as dst:
+                  while True:
+                      b=src.read(1024*1024)
+                      if not b:break
+                      dst.write(b)
+          req=urllib.request.Request('https://leica-camera.com/sites/default/files/Q3___411.lfu',headers={'User-Agent':'SL3Camera-research/1K'})
+          with urllib.request.urlopen(req,timeout=300) as r,open('/tmp/q3.lfu','wb') as f:
+              while True:
+                  b=r.read(1024*1024)
+                  if not b:break
+                  f.write(b)
+          PY
+          tar -xzf /tmp/linux.tar.gz -C /tmp
+          cd /tmp/linux-4.19.124
+          make -f Makefile ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- pvc04v_DC1231_defconfig
+          make -f Makefile ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- PVCPF_SUBMODEL=DC1231 PVCPF_HW_VERSION= -j2 dtbs
+          cd "$GITHUB_WORKSPACE"
+          python tools/sl3p_q3_dtb_cipher1k.py /tmp/q3.lfu /tmp/linux-4.19.124/arch/arm64/boot/dts/socionext/pvc04v-DC1231.dtb
+          rm -rf /tmp/q3oss.zip /tmp/linux.tar.gz /tmp/q3.lfu /tmp/linux-4.19.124
+# No firmware, DTB, ciphertext or derived keystream artifact is uploaded.
