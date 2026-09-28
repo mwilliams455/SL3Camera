@@ -36,12 +36,11 @@ def scan_tar(raw:bytes,label:str)->dict:
             "hits":hits,"hit_counts":dict(Counter(x["token"] for x in hits))}
 
 def select_members(names:list[str])->list[str]:
-    out=[]
-    for suffix in ("u-boot.tar.gz","linux.tar.gz"):
-        found=[n for n in names if n.endswith(suffix)]
-        if len(found)!=1: raise ValueError(f"expected one {suffix}, found {len(found)}")
-        out.append(found[0])
-    return out
+    uboot=[n for n in names if n.endswith("u-boot.tar.gz")]
+    linux=[n for n in names if n.rsplit("/",1)[-1].startswith("linux-") and n.endswith(".tar.gz")]
+    if len(uboot)!=1: raise ValueError(f"expected one u-boot archive, found {len(uboot)}")
+    if len(linux)!=1: raise ValueError(f"expected one versioned linux archive, found {len(linux)}")
+    return [uboot[0],linux[0]]
 
 def main():
     req=urllib.request.Request(URL,headers={"User-Agent":"SL3Camera-research/1K"})
