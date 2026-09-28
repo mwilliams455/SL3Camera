@@ -1,0 +1,74 @@
+{
+  "milestone": "RESEARCH1J",
+  "date": "2026-09-28",
+  "evidence_kind": "Reviewed selection from completed GitHub job output; not full logs",
+  "final_source_commit": "3874e9e23acdd0d7851269b27978526bb780cb39",
+  "final_source_run": 36383716961,
+  "final_source_job": 108804596111,
+  "source": {
+    "bytes": 4575234,
+    "sha256": "9c5330c22c74fcc2c5f0efedf93f88c29db8d32ddf7476c688144190ce898600",
+    "padded_target_bytes": 20971520,
+    "padded_target_sha256": "555040b9ef40ac269b6b520c6096d5ad78db5336a9ac599bf6b9f64b93cf8dc1"
+  },
+  "checks": {
+    "selected_static_checks_pass": true,
+    "local_unit_tests": 261,
+    "github_unit_tests": 261,
+    "source_only_guard_files": 89,
+    "extra_checks": "Relocated literal operand, two BL operands, missing tail preserved"
+  },
+  "destination": {
+    "object_operand": "0x2000ADA0",
+    "constructor": "0xDA04",
+    "table": "0x904",
+    "slots": {
+      "0": "0x738",
+      "4": "0x740",
+      "8": "0x762",
+      "12": "0x770",
+      "16": "0x796"
+    },
+    "packet_called_slot": 12,
+    "packet_operation": "byte comparison, not data write",
+    "address_bias": "0x80000",
+    "mismatch_status": 4,
+    "equal_status": 0
+  },
+  "storage": {
+    "adapter_constructor": "0x10870",
+    "adapter_entry": "0x108A0",
+    "storage_constructor": "0x1036C",
+    "storage_table": "0x3BDBC",
+    "read_method": "0x10454",
+    "read_command": 3,
+    "address_bytes": 3,
+    "address_order": "MSB first",
+    "physical_bus_and_chip_identified": false
+  },
+  "ram_copy": {
+    "source": "0x50C",
+    "destination": "0x20000554",
+    "requested_bytes": 2128,
+    "known_bytes": 1044,
+    "unknown_bytes": 1084,
+    "missing_bytes_invented": false
+  },
+  "completion": {
+    "wrapper": "0x796",
+    "veneer": "0x730",
+    "ram_entry": "0x200006C6",
+    "call_to_reset": "0x2000073C",
+    "reset_helper": "0x20000554",
+    "AIRCR": "0xE000ED0C",
+    "request_word": "0x05FA0004",
+    "priority_mask": "0x700",
+    "software_reset_request_identified": true,
+    "vendor_bank_switch_semantics_verified": false
+  },
+  "camera_upd_decrypted": false,
+  "base_still_renderer_recovered": false,
+  "firmware_executed": false,
+  "firmware_published": false,
+  "next_primary_direction": "Camera-side loading/protection consumer; stop extending lens detour without a concrete UPD bridge."
+}

@@ -31,7 +31,7 @@ jobs:
         run: python scripts/check_public_tree.py
       - name: Install pinned test dependencies
         run: python -m pip install -r requirements.txt
-      - name: Run synthetic tests; require the complete 240-test research baseline
+      - name: Run synthetic tests; require the complete 261-test research baseline
         shell: bash
         run: |
           python - <<'PY'
@@ -39,8 +39,8 @@ jobs:
           import unittest
           suite = unittest.defaultTestLoader.discover('tests')
           count = suite.countTestCases()
-          if count < 240:
-              raise SystemExit(f'Expected at least 240 baseline tests; discovered {count}')
+          if count < 261:
+              raise SystemExit(f'Expected at least 261 baseline tests; discovered {count}')
           result = unittest.TextTestRunner(verbosity=2).run(suite)
           sys.exit(0 if result.wasSuccessful() else 1)
           PY

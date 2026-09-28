@@ -1,39 +1,29 @@
-# Research status — RESEARCH1C
+# Research status — RESEARCH1J
 
-Recorded baseline: 27 September 2026. Repository initialization is organizational work, not a new firmware breakthrough.
+Updated 28 September 2026. Detailed methods, evidence and boundaries are in RESEARCH1J_REPORT.md. Earlier milestone reports are historical records.
 
-## Verified container observations
+## Verified
 
-The supplied `SL3P_421 (1).lfu` is 201,752,064 bytes with SHA-256 `b53a5aa7fe111c9f63b28e7cf889d8af5b5bc9397912738aba595e79923e47d8`.
+The supplied SL3-P 4.2.1 container parses and passes its stored checksum and range checks. Its 61 entries include 46 opaque protected regions; the others are empty or constant-filled. lut_data is hash-verified zero fill. Its storage/update semantics remain unknown.
 
-Removing the outer XOR-FF transform exposes the tested UPD/leica/MC7251 wrapper. The directory begins at 0x2ec, contains 61 records of 92 bytes each, and covers the payload from 0x1a00 to EOF. Section file offsets use base 0x200. CRC-32 9de57378 matches. These are consistency checks, not vendor-signature authentication.
+Standalone SLLens11.plf plus zero padding exactly reproduces the intended protected lens-section contents. This independent recovery is not decryption. Its outer LENS record layout, CRCs and four inner LDAFR packet streams have been validated. One sparse component supports coherent Cortex-M/Thumb code analysis.
 
-46 flag-3 sections remain opaque. All 15 flag-2 section hashes match directly; those records are empty or constant-fill. The 8.375 MiB `lut_data` region is zero-filled and hash verified. Its update/storage semantics remain unknown.
+A Memory command object selects fwupdate using a string comparator and calls a constructor-linked LDAFR backend. The packet reader's executable code confirms count/checksum/address/STOP handling.
 
-Two protected 128 KiB records, indexes 8 and 10, have expected hashes matching all-FF content. Four equal-size/equal-expected-hash pairs (8/10, 15/16, 19/20 and 21/22) have differing stored representations and differing 16-byte metadata.
+RESEARCH1J resolves the backend's packet destination to byte verification against memory plus 0x80000, distinct from its programming-like slot. Its storage adapter forms a 03 command with a three-byte address. Statically relocated completion code reaches an AIRCR software-reset request. Only 1,044 of 2,128 requested copy bytes are available; missing bytes are never invented.
 
-## Inferences, not recovered implementation
+## Not established
 
-Under the expected-content-hash interpretation, the 16-byte field cannot be a deterministic plaintext-only fingerprint. This does not identify it as an IV, salt, key or authentication tag. Neither entropy nor section labels identify a cipher, CPU architecture, network model or rendering algorithm. Target offsets are not established runtime addresses.
+Camera UPD cipher, keys, key derivation and a working protected-section decoder remain unidentified. The decoded lens routines do not demonstrate a camera UPD consumer. The exact lens microcontroller, storage chip and bank activation semantics are not established. No hardware or firmware was run.
 
-Recognition-related names, the large `lens` region and calibration-like labels are investigation targets only. Downloadable FOTOS Looks are a plausible explanation for reserved LUT storage, not a demonstrated explanation of this section.
+No SL3-P base still curve, colour matrix, exposure policy, autofocus model or photographic/video renderer has been recovered. FOTOS Looks remain separate, optional future inputs; an empty LUT section does not establish how they are stored or applied.
 
-## Completed bounded tests
+## Validation
 
-RESEARCH1B audited 173,040,640 opaque bytes in 42,246 complete 4 KiB tiles plus two 512-byte records. No complete tile was below entropy 7.8. This does not exclude small plaintext islands or prove encryption.
+261 pure unit tests pass locally and on GitHub. The final real-source job additionally validates selected constructor/method/instruction relationships, a relocated synthetic literal, two branch targets and a preserved missing tail. These validate tools and bounded static observations, not image quality or camera behaviour. See the report for exact job identities.
 
-RESEARCH1C tested 252 selected known-fill/context checksum expressions, 14 global-field digest hypotheses and 12 raw public-point interpretations: no matches. Its specified direct AES-mode/key/byte-convention screen tested 85,995 distinct generated candidate keys: no prefix hits. This does not identify or reject AES generally, nor eliminate unknown keys or other derivations.
+## Next gate
 
-The specified complete-word MT19937, xorshift128 and bounded binary-recurrence tests had no accepted held-out predictions. They do not exclude arbitrary generators or prove cryptographic strength. See the preserved tool implementations and continuation handoff for exact scopes.
+Prioritise a readable camera-side loading/protection consumer with a demonstrated relationship to this UPD container. Existing cross-model expected-content fingerprints and known lens plaintext are tests for a future decoding hypothesis, not a recovered key. Do not repeat the failed blind key screens or extend lens peripheral analysis without a concrete camera-UPD connection.
 
-## Validation versus photographic progress
-
-All 77 original unit tests passed again before import. The imported tools, tests and dependency file were checked against the original archive by complete Git blob hashes. Tests include positive controlled decoding cases and a prefix-success/full-hash-failure case.
-
-No real SL3-P protected plaintext, still-rendering curve, colour matrix, processing order, autofocus implementation or video path has been recovered. There are no photographic, GPU, Android, codec or camera-performance validation results.
-
-## Next research gate
-
-Find evidence of the actual package-loading/protection implementation, or a demonstrably related unprotected component that supplies a testable hypothesis. Do not repeat the same failed key generator under a new label. A second firmware version is optional; 4.2.2 is not required.
-
-Before interpreting nonconstant code/resources, require the full expected section length and SHA-256, then independently establish architecture, mapping and resource structure. Preserve the priority of the base still renderer over Looks and video.
+Base still renderer -> source-calibrated Photon integration -> optional Looks -> video. No added HDR, Cobalt, M-series replacement or 4.2.2 dependency. Firmware binaries, extracted payloads, raw crypto metadata and private media remain outside the public repository.

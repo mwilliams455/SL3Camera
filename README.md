@@ -2,31 +2,32 @@
 
 SL3-P firmware research and a future device-independent photographic renderer.
 
-**Current milestone: RESEARCH1I. The recovered lens component contains a Memory command object and constructor-linked LDAFR reader/backend. Code confirms the packet marker, checksum, address order and STOP handling. The camera UPD protection, key, base still renderer and APK remain unresolved. The synthetic suite contains 240 tests.**
+**Current milestone: RESEARCH1J. The recovered lens component's storage adapter, byte-verification destination and completion-to-reset path are now connected. The traced fwupdate loop verifies bytes rather than programming them. The camera UPD protection, key, base still renderer and APK remain unresolved. All 261 pure tests pass.**
 
-This is research source, not a Photon fork. No Leica firmware, reconstructed binary, Looks, private photographs, credentials or signing keys are committed.
+This is research source, not a Photon fork. No firmware binary, reconstructed image, Look, private media, credentials or signing keys are committed.
 
 ## Start here
 
-- [RESEARCH1I report](docs/RESEARCH1I_REPORT.md)
-- [Continuation handoff](docs/RESEARCH1I_HANDOFF.md)
-- [Selected completed-job measurements](evidence/research1i/summary.json)
-- [Sparse reconstruction and code evidence in 1H](docs/RESEARCH1H_REPORT.md)
-- [Validated LENS directory in 1G](docs/RESEARCH1G_REPORT.md)
+- [RESEARCH1J report](docs/RESEARCH1J_REPORT.md)
+- [Continuation handoff](docs/RESEARCH1J_HANDOFF.md)
+- [Selected completed-job evidence](evidence/research1j/summary.json)
+- [Current research status](docs/RESEARCH_STATUS.md)
+- [LDAFR consumer in 1I](docs/RESEARCH1I_REPORT.md)
+- [Packet reconstruction in 1H](docs/RESEARCH1H_REPORT.md)
 
-## Current evidence
+## Established evidence and boundaries
 
-The official SLLens11.plf plus zero padding matches the complete expected SHA-256 of the protected SL3-P lens section. This is independent content recovery, not decryption. LENS CRCs and LDAFR packet checks remain required before code analysis.
+The official standalone SLLens11.plf plus zero padding matches the complete intended SL3-P lens-section SHA-256. This is independent content recovery, not decryption. LENS CRCs and LDAFR packet checks remain required before code analysis.
 
-The callee at 0x25BC0 is an ASCII case-insensitive string comparator, not a decryptor. The enclosing method at 0x1DB18 identifies itself through an adjacent name method as Memory. Its constructor-supplied backend resolves to a record-processing loop at 0x11D40 and completion delegation at 0x11E38.
+The Memory command's backend calls destination table slot +12, a byte comparator at 0x770. It compares incoming data with memory at packet address +0x80000 and returns 4 on mismatch or 0 on equality. Separate slot +8 reaches programming-like controller code. The storage adapter resolves to a method forming command 03 followed by three address bytes MSB-first; its physical bus and chip are not identified.
 
-The concrete reader at 0x11AB8 checks LDAFR character constants, validates the complemented byte sum, extracts length N-5, reads a big-endian normal-record address, and recognizes STOP. Its separate opening-record reader at 0x11A34 assembles the opening word little-endian. The varying opening byte, optional STOP suffix and destination implementation remain unresolved. This is a lens-packet consumer, not the camera's UPD protection handler.
+Static copying from 0x50C to 0x20000554 supplies 1,044 known bytes out of a requested 2,128. The other 1,084 bytes remain unknown. Within the known prefix, the completion routine reaches an AIRCR software-reset request. No firmware or hardware was executed, and vendor-specific bank-switch semantics remain unverified.
 
-Use reconstructed packet addresses, not raw file offsets or the superseded flat address 0x447E1. The correct fwupdate string address is 0x41458. Entry-relative static reachability and constructor links are not a runtime trace or proof of an exposed hardware command interface.
+Use packet-reconstructed addresses, not LFU offsets or the abandoned flat mapping from 1H. Constructor links and static control flow do not prove external command exposure or runtime path feasibility. This is a lens-side path, not a camera UPD decryptor.
 
 ## Synthetic tests
 
-Use an isolated Python environment; repository CI uses Python 3.13.
+Repository CI uses Python 3.13. In an isolated environment:
 
 ```sh
 python -m venv .venv
@@ -36,25 +37,19 @@ python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 ```
 
-The 240 tests need neither real firmware nor Capstone. They validate tools and reference mathematics, not photographic fidelity. A separate research workflow cross-checks 2,048 synthetic Thumb BL targets against Capstone operands.
-
-## Explicit real-source analysis
+All 261 tests use synthetic data and need neither firmware nor Capstone. They validate tools, not photographic fidelity. Real-source analysis is separate:
 
 ```sh
 python -m pip install -r requirements-analysis.txt
-python tools/sl3p_lens_semantics1i.py
-python tools/sl3p_lens_dispatch1i.py
-python tools/sl3p_lens_backend1i.py
+python tools/sl3p_lens_verify1j.py
 ```
 
-These commands fetch and verify the pinned public source, reconstruct sparse regions in memory, and emit bounded static analysis. They do not execute firmware, flash a device or publish binaries. The callsite tool retains exploratory linear windows; use the report's constructor and reader evidence rather than treating every linear decode as a function.
+That command fetches the pinned public source, verifies identities and framing, and emits selected static checks without executing firmware or saving binaries. The interface/storage exploratory tools retain linear candidate windows; use the final verifier and report for established boundaries. The Capstone distribution/module version distinction documented in 1H remains applicable.
 
-The lens-callsite1i workflow checks selected evidence assertions in addition to tests. Ordinary main-branch CI remains synthetic. Public summaries are reviewed selections, not full logs. Checksums do not authenticate vendor signatures. The Capstone distribution/module version distinction documented in 1H remains preserved.
+Read-only evidence workflows have no device access, binary artifacts or Git write-back. Main CI is synthetic and does not download firmware. Committed evidence is a reviewed selection, not full logs; checksums do not authenticate vendor signatures. Keep private inputs out of Git; the source guard and .gitignore do not replace manual review.
 
-Keep firmware, extracted content, Looks and private inputs out of Git. The source guard and .gitignore do not replace manual review.
+## Next primary target
 
-## Next target and development order
+Return to a camera-side UPD loading/protection implementation. Pause the lens-peripheral detour unless a specific camera-UPD bridge appears. Do not repeat blind key screens or presume that a lens reset/programming routine contains the camera key.
 
-Resolve the destination interface supplied from static address 0x2000ADA0 and the reader's storage interface from 0x2000AC9C before claiming physical flash or reset behavior. Keep camera-UPD protection-consumer research separate; do not presume the lens path contains the camera key.
-
-Base still rendering -> source-calibrated Photon integration -> optional Leica Looks -> video. AF remains separate. No added HDR, Cobalt or M-series stand-in. Neither 4.2.2 nor a new user upload is required. Existing M-series projects remain untouched. L-Log mathematics is a later-video reference, not a recovered still transform.
+Base still rendering -> source-calibrated Photon integration -> optional Leica Looks -> video. AF remains separate. No HDR, Cobalt or M-series substitute. Neither 4.2.2 nor another upload is required. No M-series code or APK was changed. Published L-Log mathematics remains a later-video reference, not a recovered still transform.
