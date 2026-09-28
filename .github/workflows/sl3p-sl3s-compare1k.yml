@@ -1,0 +1,23 @@
+name: SL3-P versus SL3-S protected-content comparison 1K
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/panasonic-lineage1k]
+    paths:
+      - 'tools/sl3p_sl3s_compare1k.py'
+      - 'tests/test_sl3p_sl3s_compare1k.py'
+      - '.github/workflows/sl3p-sl3s-compare1k.yml'
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - run: python scripts/check_public_tree.py
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -q
+      - name: Fetch official SL3-S and compare expected-content fingerprints
+        run: python tools/sl3p_sl3s_compare1k.py
+# The LFU is deleted with the ephemeral runner; no binary artifact is published.
