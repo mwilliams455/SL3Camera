@@ -41,8 +41,8 @@ jobs:
           PY
           tar -xzf /tmp/linux.tar.gz -C /tmp
           cd /tmp/linux-4.19.124
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- pvc04v_DC1231_defconfig
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j2 dtbs
+          make -f Makefile ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- pvc04v_DC1231_defconfig
+          make -f Makefile ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j2 dtbs
           python - <<'PY'
           import hashlib,json,os,glob,struct
           wanted=glob.glob('arch/arm64/boot/dts/socionext/pvc04v-DC123*.dtb')
