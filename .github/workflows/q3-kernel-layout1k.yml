@@ -1,0 +1,65 @@
+name: Q3 kernel layout build 1K
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/panasonic-lineage1k]
+    paths: ['.github/workflows/q3-kernel-layout1k.yml']
+permissions: {contents: read}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - run: python scripts/check_public_tree.py
+      - name: Install kernel build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-aarch64-linux-gnu bc bison flex libssl-dev
+      - name: Build Leica-published Q3 kernel image and measure deterministic gzip candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import urllib.request,zipfile
+          u='https://leica-camera.com/sites/default/files/pm-19562-OSS_codes.zip'
+          req=urllib.request.Request(u,headers={'User-Agent':'SL3Camera-research/1K'})
+          with urllib.request.urlopen(req,timeout=300) as r, open('/tmp/q3oss.zip','wb') as f:
+              while True:
+                  b=r.read(1024*1024)
+                  if not b: break
+                  f.write(b)
+          with zipfile.ZipFile('/tmp/q3oss.zip') as z:
+              n=next(n for n in z.namelist() if n.endswith('linux-4.19.124.tar.gz'))
+              with z.open(n) as src, open('/tmp/linux.tar.gz','wb') as dst:
+                  while True:
+                      b=src.read(1024*1024)
+                      if not b: break
+                      dst.write(b)
+          PY
+          tar -xzf /tmp/linux.tar.gz -C /tmp
+          cd /tmp/linux-4.19.124
+          make -f Makefile ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- pvc04v_DC1231_defconfig
+          make -f Makefile ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j2 Image
+          cp arch/arm64/boot/Image /tmp/Image
+          gzip -n -9 -c /tmp/Image > /tmp/Image.gz
+          python - <<'PY'
+          import hashlib,json,os
+          def rec(p):
+              d=open(p,'rb').read()
+              return {'bytes':len(d),'sha256':hashlib.sha256(d).hexdigest(),'first16_hex':d[:16].hex()}
+          img=rec('/tmp/Image'); gz=rec('/tmp/Image.gz')
+          bound=0x1090000
+          print('Q3_KERNEL_LAYOUT1K_JSON_BEGIN')
+          print(json.dumps({
+            'compiler':os.popen('aarch64-linux-gnu-gcc --version').read().splitlines()[0],
+            'image':img,'gzip_n9':gz,'dtb_relative_offset':bound,
+            'gzip_fits_before_dtb':gz['bytes']<=bound,
+            'slack_before_dtb':bound-gz['bytes'],
+            'program_size':0x2cc0000
+          },separators=(',',':')))
+          print('Q3_KERNEL_LAYOUT1K_JSON_END')
+          PY
+          rm -rf /tmp/q3oss.zip /tmp/linux.tar.gz /tmp/linux-4.19.124 /tmp/Image /tmp/Image.gz
+# Source-built measurements only; no binaries are uploaded.
