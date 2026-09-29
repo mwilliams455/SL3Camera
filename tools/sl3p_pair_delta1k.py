@@ -5,7 +5,7 @@ Requires exact 4.2.1 identity matching the user's baseline. Reports derived
 statistics only; no firmware or ciphertext bytes are emitted.
 """
 from __future__ import annotations
-import hashlib,json,math,tempfile,urllib.request
+import hashlib,json,math,tempfile,time,urllib.error,urllib.request
 from pathlib import Path
 import numpy as np
 from sl3p_inspect import Firmware,inspect
@@ -14,9 +14,21 @@ URL421="https://leica-camera.com/sites/default/files/SL3P_421.lfu"
 URL422="https://leica-camera.com/sites/default/files/SL3P_422.lfu"
 SHA421="b53a5aa7fe111c9f63b28e7cf889d8af5b5bc9397912738aba595e79923e47d8"
 
-def fetch(url:str)->bytes:
-    req=urllib.request.Request(url,headers={"User-Agent":"SL3Camera-research/1K"})
-    with urllib.request.urlopen(req,timeout=240) as r:return r.read()
+def fetch(url:str, attempts:int=6)->bytes:
+    last=None
+    for attempt in range(attempts):
+        try:
+            req=urllib.request.Request(url,headers={"User-Agent":"SL3Camera-research/1K"})
+            with urllib.request.urlopen(req,timeout=240) as r:
+                data=r.read()
+            if len(data)<1024:
+                raise RuntimeError(f"download unexpectedly small: {len(data)}")
+            return data
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, RuntimeError) as exc:
+            last=exc
+            if attempt+1<attempts:
+                time.sleep(2*(attempt+1))
+    raise RuntimeError(f"download failed after {attempts} attempts: {last}")
 
 def entropy_bytes(data:bytes)->float:
     if not data:return 0.0
