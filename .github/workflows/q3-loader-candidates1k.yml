@@ -1,0 +1,71 @@
+name: Q3 loader compression candidates 1K
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/panasonic-lineage1k]
+    paths: ['.github/workflows/q3-loader-candidates1k.yml']
+permissions: {contents: read}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false}
+      - run: python scripts/check_public_tree.py
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-aarch64-linux-gnu bc bison flex device-tree-compiler libssl-dev
+      - name: Build Q3 U-Boot and test bounded compression/padding candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import urllib.request
+          u='https://leica-camera.com/sites/default/files/pm-19562-OSS_codes.zip'
+          req=urllib.request.Request(u,headers={'User-Agent':'SL3Camera-research/1K'})
+          with urllib.request.urlopen(req,timeout=240) as r, open('/tmp/q3oss.zip','wb') as f:
+              while True:
+                  b=r.read(1024*1024)
+                  if not b: break
+                  f.write(b)
+          PY
+          unzip -q /tmp/q3oss.zip '*/u-boot.tar.gz' -d /tmp/q3oss
+          tar -xzf /tmp/q3oss/*/u-boot.tar.gz -C /tmp
+          cd /tmp/u-boot
+          make -f Makefile pvc04v_MC501_defconfig
+          make -f Makefile -j2 ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- HOSTCFLAGS='-fcommon' PVCPF_SUBMODEL=MC501 PVCPF_HW_VERSION=
+          python - <<'PY'
+          import bz2,gzip,hashlib,json,lzma,os,zlib
+          expected='724e574baa46cb9aa6f20af241cd50e678ab115e24e6c1b3eed6fbd82af5ed97'
+          limit=131072
+          out={}
+          for name in ('u-boot.bin','u-boot-nodtb.bin','u-boot.dtb'):
+              if not os.path.isfile(name): continue
+              raw=open(name,'rb').read()
+              variants={'raw':raw}
+              for level in (1,6,9):
+                  variants[f'gzip_mtime0_l{level}']=gzip.compress(raw,compresslevel=level,mtime=0)
+                  variants[f'zlib_l{level}']=zlib.compress(raw,level)
+              variants['bz2_l9']=bz2.compress(raw,compresslevel=9)
+              variants['xz_lzma2']=lzma.compress(raw,format=lzma.FORMAT_XZ,preset=9)
+              variants['lzma_alone']=lzma.compress(raw,format=lzma.FORMAT_ALONE,preset=9)
+              vr={}
+              for label,data in variants.items():
+                  rec={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),
+                       'first16_hex':data[:16].hex(),'fits_128k':len(data)<=limit}
+                  if len(data)<=limit:
+                      for fill in (0,255):
+                          padded=data+bytes([fill])*(limit-len(data))
+                          h=hashlib.sha256(padded).hexdigest()
+                          rec[f'pad_{fill:02x}_sha256']=h
+                          rec[f'pad_{fill:02x}_matches_expected']=h==expected
+                  vr[label]=rec
+              out[name]=vr
+          print('Q3_LOADER_CANDIDATES1K_JSON_BEGIN')
+          print(json.dumps({'compiler':os.popen('aarch64-linux-gnu-gcc --version').read().splitlines()[0],
+            'expected_bytes':limit,'expected_sha256':expected,'outputs':out},separators=(',',':')))
+          print('Q3_LOADER_CANDIDATES1K_JSON_END')
+          PY
+          rm -rf /tmp/q3oss.zip /tmp/q3oss /tmp/u-boot
+# No generated binary artifact is uploaded.
